@@ -66,6 +66,13 @@ if errorlevel 1 (
 )
 
 echo.
+for /f "delims=" %%G in ('conda info --base 2^>nul') do echo %%G> "%CD%\.conda-base"
+if exist "%CD%\.conda-base" (
+  echo [OK] Wrote .conda-base for double-click Outlook runs ^(Save-Conda-Path.bat optional^)
+) else (
+  echo [WARN] Could not write .conda-base — run Save-Conda-Path.bat from Anaconda Prompt later.
+)
+
 echo [OK] Offline install done. Double-click Run-Demo.bat next.
 if /i not "%~1"=="--from-wrapper" pause
 exit /b 0

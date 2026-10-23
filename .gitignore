@@ -6,6 +6,7 @@ __pycache__/
 schedule.md
 schedule.ics
 .env-mode
+.conda-base
 install-last.log
 offline/wheels/*.whl
 dist/

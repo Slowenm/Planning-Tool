@@ -1,6 +1,7 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0\.."
+call "%~dp0_prepend_conda_path.bat"
 
 set "USE_CONDA=0"
 set "MODE="
