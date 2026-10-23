@@ -39,6 +39,7 @@ def run_schedule(
     ics_calendar: Path | None = None,
     reference_date: date | None = None,
     start_date: date | None = None,
+    daily_buffer_hours: float = 1.0,
 ) -> ScheduleResult:
     if not tasks_path.is_file():
         raise FileNotFoundError(f"任务文件不存在: {tasks_path}")
@@ -52,7 +53,13 @@ def run_schedule(
 
     packages = load_work_packages(tasks_path)
     events = load_calendar(calendar, ics_calendar, start, range_end)
-    result = schedule_packages(packages, events, ref, start_date=start_date)
+    result = schedule_packages(
+        packages,
+        events,
+        ref,
+        start_date=start_date,
+        daily_buffer_hours=daily_buffer_hours,
+    )
 
     report_path.write_text(build_markdown_report(result), encoding="utf-8")
     ics_path.write_bytes(build_ics(result))

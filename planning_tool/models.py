@@ -60,6 +60,7 @@ class ScheduleResult:
     day_plans: list[DayPlan]
     all_blocks: list[AssignedBlock]
     prefix_display: str
+    daily_buffer_hours: float = 1.0
 
     @property
     def total_hours(self) -> int:

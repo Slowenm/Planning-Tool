@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 
 from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from planning_tool.models import WorkPackage
 
@@ -32,8 +33,36 @@ def _cell_str(value: object) -> str:
     return str(value).strip()
 
 
+def _merged_cell_value(ws: Worksheet, row: int, col: int) -> object:
+    cell = ws.cell(row=row, column=col)
+    if cell.value is not None:
+        return cell.value
+    for merged in ws.merged_cells.ranges:
+        if (
+            merged.min_row <= row <= merged.max_row
+            and merged.min_col <= col <= merged.max_col
+        ):
+            return ws.cell(row=merged.min_row, column=merged.min_col).value
+    return None
+
+
+def _rows_from_xlsx(path: Path) -> list[tuple[str, str, str, str]]:
+    wb = load_workbook(path, read_only=False, data_only=True)
+    ws = wb.active
+    rows: list[tuple[str, str, str, str]] = []
+    for row_idx in range(1, ws.max_row + 1):
+        a = _cell_str(_merged_cell_value(ws, row_idx, 1))
+        b = _cell_str(_merged_cell_value(ws, row_idx, 2))
+        c = _cell_str(_merged_cell_value(ws, row_idx, 3))
+        d = _cell_str(_merged_cell_value(ws, row_idx, 4))
+        if not any((a, b, c, d)):
+            continue
+        rows.append((a, b, c, d))
+    wb.close()
+    return rows
+
+
 def _rows_from_sheet(path: Path) -> list[tuple[str, str, str, str]]:
-    """Return list of (milestone, prefix, work_package, time) per row."""
     suffix = path.suffix.lower()
     rows: list[tuple[str, str, str, str]] = []
 
@@ -51,21 +80,7 @@ def _rows_from_sheet(path: Path) -> list[tuple[str, str, str, str]]:
         return rows
 
     if suffix in (".xlsx", ".xlsm"):
-        wb = load_workbook(path, read_only=True, data_only=True)
-        ws = wb.active
-        for raw in ws.iter_rows(values_only=True):
-            if raw is None:
-                continue
-            cells = list(raw)
-            if not cells or all(_cell_str(c) == "" for c in cells):
-                continue
-            a = _cell_str(cells[0]) if len(cells) > 0 else ""
-            b = _cell_str(cells[1]) if len(cells) > 1 else ""
-            c = _cell_str(cells[2]) if len(cells) > 2 else ""
-            d = _cell_str(cells[3]) if len(cells) > 3 else ""
-            rows.append((a, b, c, d))
-        wb.close()
-        return rows
+        return _rows_from_xlsx(path)
 
     raise ValueError(f"unsupported task file type: {path.suffix} (use .csv or .xlsx)")
 
@@ -88,6 +103,7 @@ def load_work_packages(path: Path) -> list[WorkPackage]:
     for _milestone, prefix_raw, name, time_raw in rows:
         if not packages and _is_header_row(_milestone, prefix_raw, name, time_raw):
             continue
+        # B 列：合并单元格或逐行不同前缀均可；有值则更新，空则沿用上一行
         if prefix_raw:
             last_prefix = prefix_raw
         prefix = last_prefix
@@ -106,10 +122,18 @@ def load_work_packages(path: Path) -> list[WorkPackage]:
     return packages
 
 
-def primary_prefix(packages: list[WorkPackage]) -> str:
-    if not packages:
-        return ""
-    counts: dict[str, int] = {}
+def distinct_prefixes(packages: list[WorkPackage]) -> list[str]:
+    seen: list[str] = []
     for p in packages:
-        counts[p.prefix] = counts.get(p.prefix, 0) + 1
-    return max(counts, key=lambda k: counts[k])
+        if p.prefix not in seen:
+            seen.append(p.prefix)
+    return seen
+
+
+def primary_prefix(packages: list[WorkPackage]) -> str:
+    prefs = distinct_prefixes(packages)
+    if len(prefs) == 1:
+        return prefs[0]
+    if not prefs:
+        return ""
+    return ", ".join(prefs)

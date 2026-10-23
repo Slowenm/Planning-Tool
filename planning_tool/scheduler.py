@@ -8,7 +8,7 @@ from planning_tool.calendar_filter import (
     unoccupied_hours_in_windows,
     work_window_intervals,
 )
-from planning_tool.config import HORIZON_WORK_DAYS, MIN_BUFFER_HOURS, TIMEZONE
+from planning_tool.config import DEFAULT_DAILY_BUFFER_HOURS, HORIZON_WORK_DAYS, TIMEZONE
 from planning_tool.models import (
     AssignedBlock,
     CalendarEvent,
@@ -47,12 +47,12 @@ def next_workday(d: date) -> date:
     return n
 
 
-def max_assignable_hours(unoccupied: float) -> int:
+def max_assignable_hours(unoccupied: float, min_buffer_hours: float) -> int:
     import math
 
-    if unoccupied <= MIN_BUFFER_HOURS:
+    if unoccupied <= min_buffer_hours + 1e-9:
         return 0
-    return int(math.floor(unoccupied - MIN_BUFFER_HOURS + 1e-9))
+    return int(math.floor(unoccupied - min_buffer_hours + 1e-9))
 
 
 def describe_buffer(
@@ -61,10 +61,16 @@ def describe_buffer(
     assigned: int,
     free_slots: list[datetime],
     used_slot_starts: set[datetime],
+    min_buffer_hours: float,
 ) -> str:
     remaining = unoccupied - assigned
-    if remaining < MIN_BUFFER_HOURS - 1e-9:
-        return f"约 {remaining:.1f}h（含碎片时间，满足 ≥{MIN_BUFFER_HOURS}h 缓冲）"
+    buf_label = (
+        f"{min_buffer_hours:g}h"
+        if min_buffer_hours == int(min_buffer_hours)
+        else f"{min_buffer_hours:.1f}h"
+    )
+    if remaining < min_buffer_hours - 1e-9:
+        return f"约 {remaining:.1f}h（含碎片时间，满足 ≥{buf_label} 缓冲）"
     unused_whole = [s for s in free_slots if s not in used_slot_starts]
     if unused_whole:
         parts = []
@@ -81,7 +87,15 @@ def schedule_packages(
     reference: date,
     *,
     start_date: date | None = None,
+    daily_buffer_hours: float | None = None,
 ) -> ScheduleResult:
+    min_buffer = (
+        DEFAULT_DAILY_BUFFER_HOURS
+        if daily_buffer_hours is None
+        else float(daily_buffer_hours)
+    )
+    if min_buffer < 0:
+        raise ValueError("daily_buffer_hours 不能小于 0")
     start = resolve_schedule_start(reference, start_date)
     day_plans: list[DayPlan] = []
     all_blocks: list[AssignedBlock] = []
@@ -104,7 +118,7 @@ def schedule_packages(
         windows = work_window_intervals(current)
         unoccupied = unoccupied_hours_in_windows(windows, busy_only)
         slots = free_hour_slots(current, busy_only)
-        cap = min(len(slots), max_assignable_hours(unoccupied))
+        cap = min(len(slots), max_assignable_hours(unoccupied, min_buffer))
 
         day_assignments: list[AssignedBlock] = []
         used_starts: set[datetime] = set()
@@ -139,7 +153,7 @@ def schedule_packages(
 
         assigned_hours = len(day_assignments)
         buffer_desc = describe_buffer(
-            current, unoccupied, assigned_hours, slots, used_starts
+            current, unoccupied, assigned_hours, slots, used_starts, min_buffer
         )
 
         day_plans.append(
@@ -169,6 +183,7 @@ def schedule_packages(
         day_plans=day_plans,
         all_blocks=merged_blocks,
         prefix_display=primary_prefix(packages),
+        daily_buffer_hours=min_buffer,
     )
 
 

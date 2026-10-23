@@ -26,6 +26,7 @@ def format_conclusion(result: ScheduleResult) -> str:
     return (
         f"- **起始排期日**：{result.start_date.isoformat()}（{_weekday_label(result.start_date)}）\n"
         f"- **前缀标识**：{result.prefix_display}\n"
+        f"- **每日预留灵活时间**：{result.daily_buffer_hours:g}h\n"
         f"- **工作包数量**：{len(result.packages)} 个\n"
         f"- **总工时**：{result.total_hours}h\n"
         f"- **排期覆盖**：{span_days} 个工作日历天（其中 {work_days} 天有工作安排）\n"

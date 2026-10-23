@@ -23,6 +23,14 @@ def test_start_skips_weekend():
     assert scheduling_start(ref) == date(2026, 10, 26)
 
 
+def test_buffer_fractional():
+    ref = date(2026, 10, 20)
+    packages = [WorkPackage(1, "P", "Task", 10)]
+    result = schedule_packages(packages, [], ref, daily_buffer_hours=1.5)
+    tue = result.day_plans[0]
+    assert len(tue.assignments) == 6  # 8h - 1.5h -> floor 6.5 = 6
+
+
 def test_buffer_limits_daily_hours():
     ref = date(2026, 10, 20)  # Mon -> start Tue 21
     packages = [WorkPackage(1, "UBSW02", "Big task", 10)]

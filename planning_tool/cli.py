@@ -54,6 +54,12 @@ def main(argv: list[str] | None = None) -> int:
         default=Path("schedule.ics"),
         help="ICS 输出路径",
     )
+    parser.add_argument(
+        "--daily-buffer-hours",
+        type=float,
+        default=1.0,
+        help="每日预留灵活时间（小时，可小数如 1.5，≥0）",
+    )
     args = parser.parse_args(argv)
 
     ref = (
@@ -72,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
             ics_calendar=args.ics_calendar,
             reference_date=ref,
             start_date=start_d,
+            daily_buffer_hours=args.daily_buffer_hours,
         )
     except Exception as e:
         print(f"排期失败: {e}", file=sys.stderr)

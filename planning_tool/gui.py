@@ -47,6 +47,7 @@ class PlanningApp:
         self.start_date = StringVar(value=_default_start_iso())
         self.calendar = StringVar(value="outlook")
         self.ics_calendar = StringVar()
+        self.daily_buffer = StringVar(value="1.0")
 
         self._build()
         self._load_outlook_tz()
@@ -73,6 +74,14 @@ class PlanningApp:
             side=LEFT, fill=X, expand=True
         )
         Button(tasks_row, text="浏览…", command=self._browse_tasks).pack(side=RIGHT, padx=2)
+        row += 1
+        Label(
+            frm,
+            text="B 列 Prefix 支持合并单元格；不同行可不同前缀，ICS/报告主题带各自 [Prefix]",
+            fg="#666",
+            wraplength=520,
+            justify="left",
+        ).grid(row=row, column=1, sticky="w", padx=8, pady=(0, 4))
 
         row += 1
         Label(frm, text="输出目录:").grid(row=row, column=0, sticky="w", **pad)
@@ -91,6 +100,17 @@ class PlanningApp:
         Entry(sd_row, textvariable=self.start_date, width=12).pack(side=LEFT)
         Button(sd_row, text="选日期…", command=self._pick_start_date).pack(side=LEFT, padx=6)
         Label(sd_row, text="东八区；选到周末自动顺延到周一", fg="#555").pack(side=LEFT)
+
+        row += 1
+        Label(frm, text="每日预留灵活时间:").grid(row=row, column=0, sticky="w", **pad)
+        buf_row = Frame(frm)
+        buf_row.grid(row=row, column=1, sticky="w", **pad)
+        Entry(buf_row, textvariable=self.daily_buffer, width=8).pack(side=LEFT)
+        Label(
+            buf_row,
+            text="  小时（可填 0、1、1.5、2 …，每天至少保留该时长不排任务）",
+            fg="#555",
+        ).pack(side=LEFT)
 
         row += 1
         Label(frm, text="会议占用来源:").grid(row=row, column=0, sticky="nw", **pad)
@@ -219,6 +239,16 @@ class PlanningApp:
         if path:
             self.ics_calendar.set(path)
 
+    def _parse_daily_buffer(self) -> float:
+        text = self.daily_buffer.get().strip().replace(",", ".")
+        try:
+            val = float(text)
+        except ValueError as e:
+            raise ValueError("每日预留灵活时间必须是数字（小时）") from e
+        if val < 0:
+            raise ValueError("每日预留灵活时间不能小于 0")
+        return val
+
     def _parse_start(self) -> date:
         text = self.start_date.get().strip()
         try:
@@ -232,6 +262,7 @@ class PlanningApp:
             tasks = Path(self.tasks_path.get().strip())
             out_dir = Path(self.output_dir.get().strip())
             start = self._parse_start()
+            buffer_h = self._parse_daily_buffer()
             cal = self.calendar.get().strip()
             ics_path = self.ics_calendar.get().strip()
             ics_cal = Path(ics_path) if ics_path else None
@@ -242,7 +273,7 @@ class PlanningApp:
             self._log("—— 开始排期 ——")
             self._log(f"任务: {tasks}")
             self._log(f"输出: {out_dir}")
-            self._log(f"开始日: {start.isoformat()}  日历: {cal}")
+            self._log(f"开始日: {start.isoformat()}  日历: {cal}  日缓冲: {buffer_h}h")
 
             result = run_schedule(
                 tasks,
@@ -252,6 +283,7 @@ class PlanningApp:
                 ics_calendar=ics_cal,
                 reference_date=today_local(),
                 start_date=start,
+                daily_buffer_hours=buffer_h,
             )
             finish = ""
             if result.finish_datetime:
