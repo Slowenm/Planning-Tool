@@ -58,6 +58,7 @@ set "PIP_EDIT=%ERRORLEVEL%"
 
 echo conda> .env-mode
 echo offline>> .env-mode
+echo system> "%CD%\.outlook-tz"
 
 echo Verify import ...
 python -c "import planning_tool.cli; print('import OK')"

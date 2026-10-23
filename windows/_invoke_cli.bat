@@ -23,6 +23,7 @@ if /i "%RUNTIME%"=="conda" (
     exit /b 1
   )
   set "PYTHONPATH=%ROOT%"
+  call "%~dp0_set_outlook_tz.bat"
   python -m planning_tool.cli %*
   exit /b %ERRORLEVEL%
 )

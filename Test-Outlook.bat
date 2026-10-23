@@ -7,7 +7,8 @@ if errorlevel 1 (
   exit /b 1
 )
 set "PYTHONPATH=%CD%"
-echo Reading Outlook calendar — keep Outlook open...
+call "%~dp0windows\_set_outlook_tz.bat"
+echo Reading Outlook (PLANNING_OUTLOOK_NAIVE_TZ=%PLANNING_OUTLOOK_NAIVE_TZ%) — keep Outlook open...
 python -m planning_tool.outlook_test --output outlook-calendar-test.md
 set RC=%ERRORLEVEL%
 echo.

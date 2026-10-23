@@ -12,6 +12,7 @@ if errorlevel 1 (
   exit /b 1
 )
 set "PYTHONPATH=%CD%"
+call "%~dp0windows\_set_outlook_tz.bat"
 python -m planning_tool.cli --tasks "%~1" --calendar outlook --report schedule.md --ics schedule.ics
 if errorlevel 1 pause
 exit /b %ERRORLEVEL%

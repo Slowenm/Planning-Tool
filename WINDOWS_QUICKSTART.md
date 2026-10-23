@@ -68,6 +68,16 @@ python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlo
 
 若 `plan-work` 提示找不到命令，**属正常**：请用 `python -m planning_tool.cli`，或双击 **Run-Demo.bat**（已自动使用该方式）。
 
+### Outlook 时区（与系统时间一致，推荐）
+
+排期工作窗为 **东八区 08:00–17:00**。Outlook COM 读到的时刻先按 **Windows 系统时区** 理解，再换算到东八区（环境变量 **`PLANNING_OUTLOOK_NAIVE_TZ=system`**，默认）。
+
+请把 **Windows 设置 → 时间和语言 → 时区** 设为 **(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐**（与 Outlook 日历里看到的时间一致）。
+
+安装完成后根目录会有 **`.outlook-tz`**，内容为 `system`。正式排期 / `Test-Outlook.bat` 会自动使用该设置。
+
+仅当与 Outlook 仍差 8 小时时，才改为 `utc` 或 `asia_shanghai`（见 v0.1.14 说明）。
+
 ### 离线安装（无法解析 pypi.org / 完全断外网）
 
 若报错 **`Failed to resolve 'pypi.org'`** 或 **`getaddrinfo failed`**，说明本机 **DNS/外网到 PyPI 不通**，在线 `pip install` 不可用。
