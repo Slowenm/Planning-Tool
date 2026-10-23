@@ -23,15 +23,16 @@ def format_conclusion(result: ScheduleResult) -> str:
     )
     work_days = len([d for d in result.day_plans if d.assignments])
     span_days = len(result.day_plans)
+    work_line = (
+        f"- **工作时段**：{result.work_hours.label_work()}（午餐 {result.work_hours.label_lunch()} 不排任务）\n"
+        if result.work_hours
+        else ""
+    )
     return (
         f"- **起始排期日**：{result.start_date.isoformat()}（{_weekday_label(result.start_date)}）\n"
         f"- **前缀标识**：{result.prefix_display}\n"
         f"- **每日预留灵活时间**：{result.daily_buffer_hours:g}h\n"
-        + (
-            f"- **工作时段**：{result.work_hours.label_work()}（午餐 {result.work_hours.label_lunch()} 不排任务）\n"
-            if result.work_hours
-            else ""
-        )
+        f"{work_line}"
         f"- **工作包数量**：{len(result.packages)} 个\n"
         f"- **总工时**：{result.total_hours}h\n"
         f"- **排期覆盖**：{span_days} 个工作日历天（其中 {work_days} 天有工作安排）\n"

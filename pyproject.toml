@@ -1,6 +1,6 @@
 [project]
 name = "planning-tool"
-version = "0.2.4"
+version = "0.2.5"
 description = "Work package scheduler with Outlook calendar avoidance; outputs Markdown and ICS"
 readme = "README.md"
 requires-python = ">=3.10"
