@@ -5,6 +5,7 @@ __pycache__/
 *.egg-info/
 schedule.md
 schedule.ics
+.env-mode
 dist/
 !dist/.gitkeep
 build/

@@ -26,6 +26,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [3/3] 完成。可双击 run-demo.bat 试跑，或用 plan-work.bat 排期。
+echo venv> .env-mode
+echo [3/3] 完成（.env-mode=venv）。可双击 run-demo.bat 试跑，或用 plan-work.bat 排期。
+echo 若你平时用 Anaconda，请改用 windows\install-conda.bat。
 pause
 exit /b 0
