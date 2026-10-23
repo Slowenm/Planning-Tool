@@ -15,6 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download offline wheels (win/py311)
+        run: |
+          chmod +x scripts/download-offline-wheels.sh
+          ./scripts/download-offline-wheels.sh
+
       - name: Build portable zip
         run: |
           chmod +x scripts/build-portable-zip.sh

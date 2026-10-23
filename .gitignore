@@ -7,6 +7,7 @@ schedule.md
 schedule.ics
 .env-mode
 install-last.log
+offline/wheels/*.whl
 dist/
 !dist/.gitkeep
 build/

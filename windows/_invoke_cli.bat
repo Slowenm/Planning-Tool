@@ -5,7 +5,8 @@ set "RUNTIME=%~1"
 shift
 
 if /i "%RUNTIME%"=="conda" (
-  conda run -n planning-tool --no-capture-output python -m planning_tool.cli %*
+  rem 离线安装或未 editable 时，保证能 import 本项目
+  conda run -n planning-tool -e "PYTHONPATH=%CD%" --no-capture-output python -m planning_tool.cli %*
   exit /b %ERRORLEVEL%
 )
 

@@ -68,9 +68,20 @@ python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlo
 
 若 `plan-work` 提示找不到命令，**属正常**：请用 `python -m planning_tool.cli`，或双击 **Run-Demo.bat**（已自动使用该方式）。
 
+### 离线安装（无法解析 pypi.org / 完全断外网）
+
+若报错 **`Failed to resolve 'pypi.org'`** 或 **`getaddrinfo failed`**，说明本机 **DNS/外网到 PyPI 不通**，在线 `pip install` 不可用。
+
+请下载带 **`offline/wheels`** 的完整包（Release 名称含 **offline**，或体积约 **10MB+** 的 zip），解压后：
+
+1. 双击 **`Install-Offline.bat`**（不要用 Install-Conda.bat）
+2. 再双击 **`Run-Demo.bat`**
+
+内网仅 conda 镜像可用时，`conda create` 仍走公司源；**Python 包装依赖** 全部从 `offline\wheels` 本地安装，**不访问 pypi.org**。
+
 ### 公司网络 / pip 401（Credentials not correct）
 
-Many corporate PCs set a **private pip mirror** in `%APPDATA%\pip\pip.ini` or `%USERPROFILE%\.pip\pip.conf`. When credentials expire, `pip install` fails with **401**.
+很多公司电脑在 `%APPDATA%\pip\pip.ini` 或 `%USERPROFILE%\.pip\pip.conf` 里配置了**内网 pip 镜像**；凭证过期时会出现 **401**。
 
 在本项目目录、已 `conda activate planning-tool` 时执行：
 
