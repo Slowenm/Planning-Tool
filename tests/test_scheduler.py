@@ -4,7 +4,17 @@ import pytest
 
 from planning_tool.config import TIMEZONE
 from planning_tool.models import CalendarEvent, WorkPackage
-from planning_tool.scheduler import schedule_packages, scheduling_start
+from planning_tool.scheduler import (
+    resolve_schedule_start,
+    schedule_packages,
+    scheduling_start,
+)
+
+
+def test_explicit_start_date():
+    ref = date(2026, 10, 20)
+    assert resolve_schedule_start(ref, date(2026, 10, 27)) == date(2026, 10, 27)
+    assert resolve_schedule_start(ref, date(2026, 10, 25)) == date(2026, 10, 27)
 
 
 def test_start_skips_weekend():

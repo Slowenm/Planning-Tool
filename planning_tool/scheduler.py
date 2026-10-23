@@ -27,6 +27,19 @@ def scheduling_start(reference: date) -> date:
     return d
 
 
+def resolve_schedule_start(
+    reference: date,
+    start_date: date | None = None,
+) -> date:
+    """Explicit start_date wins; else Skill rule (day after reference, skip weekend)."""
+    if start_date is not None:
+        d = start_date
+        while d.weekday() >= 5:
+            d += timedelta(days=1)
+        return d
+    return scheduling_start(reference)
+
+
 def next_workday(d: date) -> date:
     n = d + timedelta(days=1)
     while n.weekday() >= 5:
@@ -66,8 +79,10 @@ def schedule_packages(
     packages: list[WorkPackage],
     events: list[CalendarEvent],
     reference: date,
+    *,
+    start_date: date | None = None,
 ) -> ScheduleResult:
-    start = scheduling_start(reference)
+    start = resolve_schedule_start(reference, start_date)
     day_plans: list[DayPlan] = []
     all_blocks: list[AssignedBlock] = []
 

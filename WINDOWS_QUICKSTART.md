@@ -16,6 +16,15 @@
    - **官方 Python / venv**：双击根目录 **`Install.bat`**
 3. 双击根目录 **`Run-Demo.bat`**，确认生成 `schedule.md` 和 `schedule.ics`
 
+## 图形界面（v0.2.0+）
+
+双击 **`Planning-Tool-GUI.bat`**：
+
+- 浏览选择 **任务表**、**输出目录**
+- 设置 **排期开始日期**（YYYY-MM-DD，东八区）
+- 选择 Outlook / ICS / 无日历
+- 点击 **开始排期** → 输出目录下生成 `schedule.md` 与 `schedule.ics`
+
 ### 若必须在 cmd / Anaconda Prompt 里输入命令
 
 路径含空格时**整段路径必须加英文双引号**，且先 `cd` 到解压目录：
