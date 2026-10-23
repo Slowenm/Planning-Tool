@@ -5,8 +5,13 @@ set "RUNTIME=%~1"
 shift
 
 if /i "%RUNTIME%"=="conda" (
-  rem 离线安装或未 editable 时，保证能 import 本项目
-  conda run -n planning-tool -e "PYTHONPATH=%CD%" --no-capture-output python -m planning_tool.cli %*
+  call "%~dp0_conda_activate_planning_tool.bat"
+  if errorlevel 1 (
+    echo [ERROR] activate planning-tool failed. Run Install-Offline.bat or Install-Conda.bat
+    exit /b 1
+  )
+  set "PYTHONPATH=%CD%"
+  python -m planning_tool.cli %*
   exit /b %ERRORLEVEL%
 )
 
@@ -16,5 +21,5 @@ if /i "%RUNTIME%"=="venv" (
   exit /b %ERRORLEVEL%
 )
 
-echo [错误] 未知运行时: %RUNTIME%
+echo [ERROR] unknown runtime: %RUNTIME%
 exit /b 1
