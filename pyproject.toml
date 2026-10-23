@@ -1,0 +1,26 @@
+[project]
+name = "planning-tool"
+version = "0.1.0"
+description = "Work package scheduler with Outlook calendar avoidance; outputs Markdown and ICS"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openpyxl>=3.1.0",
+    "icalendar>=6.0.0",
+    "tzdata>=2024.1",
+]
+
+[project.optional-dependencies]
+outlook = ["pywin32>=306; sys_platform == 'win32'"]
+dev = ["pytest>=8.0.0"]
+
+[project.scripts]
+plan-work = "planning_tool.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["planning_tool*"]
