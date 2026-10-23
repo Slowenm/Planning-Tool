@@ -1,0 +1,8 @@
+Copy-paste in Anaconda Prompt (replace paths if needed):
+
+cd /d "C:\Users\ioh1szh\Desktop\Jw.Z\10. Module\95. Tool\02. Planning\Planning-Tool-0.1.7-windows-portable"
+conda activate planning-tool
+set PYTHONPATH=%CD%
+python -m planning_tool.cli --tasks "C:\Users\ioh1szh\Desktop\Jw.Z\10. Module\95. Tool\02. Planning\HW_Module_ChangeAssessment_WP.xlsx" --calendar outlook --report schedule.md --ics schedule.ics
+
+Then open schedule.md and import schedule.ics into Outlook.

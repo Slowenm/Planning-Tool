@@ -1,16 +1,23 @@
 @echo off
+chcp 65001 >nul 2>&1
 setlocal EnableExtensions
 cd /d "%~dp0\.."
 
 if "%~1"=="" (
-  echo 用法: 将任务表拖到本脚本上，或：
-  echo   run-with-outlook.bat D:\path\tasks.xlsx
+  echo Usage: drag your tasks.xlsx onto Run-With-Outlook.bat
+  echo   or: run-with-outlook.bat "D:\path\tasks.xlsx"
   pause
   exit /b 1
 )
 
-echo 读取 Outlook 日历并排期: %~1
+echo Scheduling with Outlook calendar: %~1
 call "%~dp0plan-work.bat" --tasks "%~1" --calendar outlook --report schedule.md --ics schedule.ics
+set RC=%ERRORLEVEL%
 echo.
-echo 完成。请双击 schedule.ics 导入 Outlook。
+if %RC%==0 (
+  echo Done. Open schedule.md to review, then double-click schedule.ics to import Outlook.
+) else (
+  echo Failed. If you use Anaconda, run from Anaconda Prompt after Install-Offline.bat.
+)
 pause
+exit /b %RC%
