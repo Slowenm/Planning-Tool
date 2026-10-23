@@ -1,6 +1,11 @@
+from datetime import time
 from zoneinfo import ZoneInfo
 
 TIMEZONE = ZoneInfo("Asia/Shanghai")
+DEFAULT_WORK_START = time(8, 0)
+DEFAULT_WORK_END = time(17, 0)
+DEFAULT_LUNCH_START = time(12, 0)
+DEFAULT_LUNCH_END = time(13, 0)
 WORK_START_HOUR = 8
 WORK_END_HOUR = 17
 LUNCH_START_HOUR = 12

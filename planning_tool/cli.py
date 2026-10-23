@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from planning_tool.runner import run_schedule, today_local
+from planning_tool.work_hours import WorkDayConfig
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -60,6 +61,10 @@ def main(argv: list[str] | None = None) -> int:
         default=1.0,
         help="每日预留灵活时间（小时，可小数如 1.5，≥0）",
     )
+    parser.add_argument("--work-start", default="08:00", help="开始工作时间 HH:MM")
+    parser.add_argument("--work-end", default="17:00", help="结束工作时间 HH:MM")
+    parser.add_argument("--lunch-start", default="12:00", help="午餐开始 HH:MM")
+    parser.add_argument("--lunch-end", default="13:00", help="午餐结束 HH:MM")
     args = parser.parse_args(argv)
 
     ref = (
@@ -70,6 +75,12 @@ def main(argv: list[str] | None = None) -> int:
     start_d = date.fromisoformat(args.start_date) if args.start_date else None
 
     try:
+        wh = WorkDayConfig.from_strings(
+            args.work_start,
+            args.work_end,
+            args.lunch_start,
+            args.lunch_end,
+        )
         result = run_schedule(
             args.tasks,
             args.report,
@@ -79,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
             reference_date=ref,
             start_date=start_d,
             daily_buffer_hours=args.daily_buffer_hours,
+            work_hours=wh,
         )
     except Exception as e:
         print(f"排期失败: {e}", file=sys.stderr)

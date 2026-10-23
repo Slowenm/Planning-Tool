@@ -27,6 +27,7 @@ from tkinter import (
 
 from planning_tool.gui_calendar import DatePickerDialog
 from planning_tool.runner import run_schedule, today_local
+from planning_tool.work_hours import WorkDayConfig
 from planning_tool.scheduler import resolve_schedule_start
 
 
@@ -48,6 +49,10 @@ class PlanningApp:
         self.calendar = StringVar(value="outlook")
         self.ics_calendar = StringVar()
         self.daily_buffer = StringVar(value="1.0")
+        self.work_start = StringVar(value="08:00")
+        self.work_end = StringVar(value="17:00")
+        self.lunch_start = StringVar(value="12:00")
+        self.lunch_end = StringVar(value="13:00")
 
         self._build()
         self._load_outlook_tz()
@@ -100,6 +105,20 @@ class PlanningApp:
         Entry(sd_row, textvariable=self.start_date, width=12).pack(side=LEFT)
         Button(sd_row, text="选日期…", command=self._pick_start_date).pack(side=LEFT, padx=6)
         Label(sd_row, text="东八区；选到周末自动顺延到周一", fg="#555").pack(side=LEFT)
+
+        row += 1
+        Label(frm, text="工作时间 (东八区):").grid(row=row, column=0, sticky="nw", **pad)
+        wh_row = Frame(frm)
+        wh_row.grid(row=row, column=1, sticky="w", **pad)
+        Label(wh_row, text="开始").pack(side=LEFT)
+        Entry(wh_row, textvariable=self.work_start, width=6).pack(side=LEFT, padx=2)
+        Label(wh_row, text="结束").pack(side=LEFT, padx=(8, 0))
+        Entry(wh_row, textvariable=self.work_end, width=6).pack(side=LEFT, padx=2)
+        Label(wh_row, text="午餐").pack(side=LEFT, padx=(8, 0))
+        Entry(wh_row, textvariable=self.lunch_start, width=6).pack(side=LEFT, padx=2)
+        Label(wh_row, text="—").pack(side=LEFT)
+        Entry(wh_row, textvariable=self.lunch_end, width=6).pack(side=LEFT, padx=2)
+        Label(wh_row, text="  (HH:MM，午餐时段不排任务)", fg="#555").pack(side=LEFT)
 
         row += 1
         Label(frm, text="每日预留灵活时间:").grid(row=row, column=0, sticky="w", **pad)
@@ -239,6 +258,14 @@ class PlanningApp:
         if path:
             self.ics_calendar.set(path)
 
+    def _parse_work_hours(self) -> WorkDayConfig:
+        return WorkDayConfig.from_strings(
+            self.work_start.get(),
+            self.work_end.get(),
+            self.lunch_start.get(),
+            self.lunch_end.get(),
+        )
+
     def _parse_daily_buffer(self) -> float:
         text = self.daily_buffer.get().strip().replace(",", ".")
         try:
@@ -263,6 +290,7 @@ class PlanningApp:
             out_dir = Path(self.output_dir.get().strip())
             start = self._parse_start()
             buffer_h = self._parse_daily_buffer()
+            wh = self._parse_work_hours()
             cal = self.calendar.get().strip()
             ics_path = self.ics_calendar.get().strip()
             ics_cal = Path(ics_path) if ics_path else None
@@ -273,7 +301,10 @@ class PlanningApp:
             self._log("—— 开始排期 ——")
             self._log(f"任务: {tasks}")
             self._log(f"输出: {out_dir}")
-            self._log(f"开始日: {start.isoformat()}  日历: {cal}  日缓冲: {buffer_h}h")
+            self._log(
+                f"开始日: {start.isoformat()}  工作: {wh.label_work()}  午餐: {wh.label_lunch()}  "
+                f"日缓冲: {buffer_h}h  日历: {cal}"
+            )
 
             result = run_schedule(
                 tasks,
@@ -284,6 +315,7 @@ class PlanningApp:
                 reference_date=today_local(),
                 start_date=start,
                 daily_buffer_hours=buffer_h,
+                work_hours=wh,
             )
             finish = ""
             if result.finish_datetime:
@@ -306,7 +338,21 @@ class PlanningApp:
             out_dir = Path(self.output_dir.get().strip() or Path.cwd())
             out = out_dir / "outlook-calendar-test.md"
             self._log("测试 Outlook 读取…")
-            code = outlook_test_main(["--output", str(out)])
+            wh = self._parse_work_hours()
+            code = outlook_test_main(
+                [
+                    "--output",
+                    str(out),
+                    "--work-start",
+                    wh.work_start.strftime("%H:%M"),
+                    "--work-end",
+                    wh.work_end.strftime("%H:%M"),
+                    "--lunch-start",
+                    wh.lunch_start.strftime("%H:%M"),
+                    "--lunch-end",
+                    wh.lunch_end.strftime("%H:%M"),
+                ]
+            )
             if code == 0:
                 self._log(f"报告: {out}")
                 messagebox.showinfo("Outlook 测试", f"已写入\n{out}")

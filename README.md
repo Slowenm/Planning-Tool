@@ -82,9 +82,9 @@ plan-work --tasks tasks.csv --reference-date 2026-10-23
 
 规则摘要：
 
-- 工作日 08:00–17:00，午休 12:00–13:00 不排任务  
+- 工作日窗口与午餐时段可配置（默认 08:00–17:00、午餐 12:00–13:00；GUI 或 `--work-start` / `--work-end` / `--lunch-start` / `--lunch-end`）  
 - 整小时粒度；会议造成的 **&lt;1h 碎片** 不可排包，计入空余  
-- 每日至少 **1h** 缓冲（`已排工时 ≤ 当日无占用时长 - 1h`）  
+- 每日预留灵活时间可配置（默认 1h；`--daily-buffer-hours` 或 GUI）  
 - 忽略 `Canceled:` / 全天 OoO / ≥24h 全天提醒；其余会议与自留日程均避让  
 
 ## 开发 / 测试（Linux CI）

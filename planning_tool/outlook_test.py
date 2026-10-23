@@ -11,19 +11,26 @@ from planning_tool.calendar_filter import busy_intervals_for_day, is_canceled, i
 from planning_tool.config import TIMEZONE
 from planning_tool.scheduler import scheduling_start
 from planning_tool.timezone_utils import describe_system_tz, get_outlook_naive_mode
+from planning_tool.work_hours import WorkDayConfig
 
 
 def _today() -> date:
     return datetime.now(TIMEZONE).date()
 
 
-def build_report(events: list, range_start: date, range_end: date) -> str:
+def build_report(
+    events: list,
+    range_start: date,
+    range_end: date,
+    work_hours: WorkDayConfig | None = None,
+) -> str:
+    wh = work_hours or WorkDayConfig.default()
     sys_tz = describe_system_tz()
     lines = [
         "# Outlook 日历读取测试报告",
         "",
         f"- 查询区间（排期用）: **{range_start}** ~ **{range_end}**（**Asia/Shanghai 东八区**）",
-        f"- 工作窗: 08:00–17:00 **东八区**",
+        f"- 工作窗: {wh.label_work()} **东八区**（午餐 {wh.label_lunch()} 不排任务）",
         f"- 原始事件数: **{len(events)}**",
         f"- PC 系统时区: **{sys_tz}**",
         f"- Outlook COM 解释模式 `PLANNING_OUTLOOK_NAIVE_TZ`: **{get_outlook_naive_mode()}**",
@@ -59,12 +66,14 @@ def build_report(events: list, range_start: date, range_end: date) -> str:
     else:
         lines.append("- （无）")
 
-    lines.extend(["", "## 3. 工作窗 08:00–17:00 内视为占用的时段", ""])
+    lines.extend(
+        ["", f"## 3. 工作窗 {wh.label_work()} 内视为占用的时段", ""]
+    )
     day = range_start
     any_busy = False
     while day <= range_end:
         if day.weekday() < 5:
-            busy = busy_intervals_for_day(day, kept)
+            busy = busy_intervals_for_day(day, kept, wh)
             lines.append(f"### {day.isoformat()} (周{'一二三四五六日'[day.weekday()]})")
             if busy:
                 any_busy = True
@@ -125,6 +134,10 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="覆盖 PLANNING_OUTLOOK_NAIVE_TZ，测试 COM 时间解释方式",
     )
+    parser.add_argument("--work-start", default="08:00", help="开始工作时间 HH:MM")
+    parser.add_argument("--work-end", default="17:00", help="结束工作时间 HH:MM")
+    parser.add_argument("--lunch-start", default="12:00", help="午餐开始 HH:MM")
+    parser.add_argument("--lunch-end", default="13:00", help="午餐结束 HH:MM")
     args = parser.parse_args(argv)
 
     if args.outlook_tz:
@@ -139,6 +152,17 @@ def main(argv: list[str] | None = None) -> int:
         else scheduling_start(ref)
     )
     range_end = range_start + timedelta(days=max(args.days, 1))
+
+    try:
+        wh = WorkDayConfig.from_strings(
+            args.work_start,
+            args.work_end,
+            args.lunch_start,
+            args.lunch_end,
+        )
+    except ValueError as e:
+        print(f"工作时间设置无效: {e}", file=sys.stderr)
+        return 1
 
     try:
         if args.outlook_tz:
@@ -162,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
-    report = build_report(events, range_start, range_end)
+    report = build_report(events, range_start, range_end, wh)
     args.output.write_text(report, encoding="utf-8")
     print(f"已读取 {len(events)} 条日历项")
     print(f"报告已写入: {args.output.resolve()}")

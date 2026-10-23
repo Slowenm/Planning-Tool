@@ -3,14 +3,9 @@ from __future__ import annotations
 import re
 from datetime import date, datetime, time, timedelta
 
-from planning_tool.config import (
-    CANCELED_PREFIXES,
-    Ooo_KEYWORDS,
-    TIMEZONE,
-    WORK_END_HOUR,
-    WORK_START_HOUR,
-)
+from planning_tool.config import CANCELED_PREFIXES, Ooo_KEYWORDS, TIMEZONE
 from planning_tool.models import CalendarEvent, TimeInterval
+from planning_tool.work_hours import WorkDayConfig
 
 
 def _to_local(dt: datetime) -> datetime:
@@ -42,15 +37,19 @@ def is_ignored_all_day(event: CalendarEvent) -> bool:
     return duration >= timedelta(hours=24)
 
 
-def work_window_intervals(day: date) -> list[TimeInterval]:
-    morning_start = datetime.combine(day, time(WORK_START_HOUR, 0), tzinfo=TIMEZONE)
-    morning_end = datetime.combine(day, time(12, 0), tzinfo=TIMEZONE)
-    afternoon_start = datetime.combine(day, time(13, 0), tzinfo=TIMEZONE)
-    afternoon_end = datetime.combine(day, time(WORK_END_HOUR, 0), tzinfo=TIMEZONE)
-    return [
-        TimeInterval(morning_start, morning_end),
-        TimeInterval(afternoon_start, afternoon_end),
-    ]
+def work_window_intervals(day: date, cfg: WorkDayConfig | None = None) -> list[TimeInterval]:
+    cfg = cfg or WorkDayConfig.default()
+    day_start = datetime.combine(day, cfg.work_start, tzinfo=TIMEZONE)
+    day_end = datetime.combine(day, cfg.work_end, tzinfo=TIMEZONE)
+    lunch_s = datetime.combine(day, cfg.lunch_start, tzinfo=TIMEZONE)
+    lunch_e = datetime.combine(day, cfg.lunch_end, tzinfo=TIMEZONE)
+
+    intervals: list[TimeInterval] = []
+    if lunch_s > day_start:
+        intervals.append(TimeInterval(day_start, min(lunch_s, day_end)))
+    if lunch_e < day_end:
+        intervals.append(TimeInterval(max(lunch_e, day_start), day_end))
+    return [i for i in intervals if i.end > i.start]
 
 
 def clip_to_interval(inner: TimeInterval, outer: TimeInterval) -> TimeInterval | None:
@@ -70,9 +69,11 @@ def overlap_hours(a: TimeInterval, b: TimeInterval) -> float:
 
 
 def busy_intervals_for_day(
-    day: date, events: list[CalendarEvent]
+    day: date,
+    events: list[CalendarEvent],
+    cfg: WorkDayConfig | None = None,
 ) -> list[tuple[str, TimeInterval]]:
-    windows = work_window_intervals(day)
+    windows = work_window_intervals(day, cfg)
     busy: list[tuple[str, TimeInterval]] = []
 
     for ev in events:
@@ -120,13 +121,29 @@ def unoccupied_hours_in_windows(
     return max(0.0, total_window - busy_hours)
 
 
-def free_hour_slots(day: date, busy: list[TimeInterval]) -> list[datetime]:
-    """Full-hour slots [8-9..11-12, 13-14..16-17] with no overlap with busy."""
+def _slot_fully_in_windows(slot: TimeInterval, windows: list[TimeInterval]) -> bool:
+    for w in windows:
+        if slot.start >= w.start and slot.end <= w.end:
+            return True
+    return False
+
+
+def free_hour_slots(
+    day: date,
+    busy: list[TimeInterval],
+    cfg: WorkDayConfig | None = None,
+) -> list[datetime]:
+    """Whole-hour slots inside work windows (excluding lunch), not overlapping busy."""
+    cfg = cfg or WorkDayConfig.default()
+    windows = work_window_intervals(day, cfg)
     slots: list[datetime] = []
-    for hour in list(range(8, 12)) + list(range(13, 17)):
+
+    for hour in range(24):
         start = datetime.combine(day, time(hour, 0), tzinfo=TIMEZONE)
         end = start + timedelta(hours=1)
         slot = TimeInterval(start, end)
+        if not _slot_fully_in_windows(slot, windows):
+            continue
         blocked = any(overlap_hours(slot, b) > 0 for b in busy)
         if not blocked:
             slots.append(start)

@@ -17,6 +17,7 @@ from planning_tool.models import (
     WorkPackage,
 )
 from planning_tool.tasks import primary_prefix
+from planning_tool.work_hours import WorkDayConfig
 
 
 def scheduling_start(reference: date) -> date:
@@ -88,7 +89,10 @@ def schedule_packages(
     *,
     start_date: date | None = None,
     daily_buffer_hours: float | None = None,
+    work_hours: WorkDayConfig | None = None,
 ) -> ScheduleResult:
+    wh = work_hours or WorkDayConfig.default()
+    wh.validate()
     min_buffer = (
         DEFAULT_DAILY_BUFFER_HOURS
         if daily_buffer_hours is None
@@ -113,11 +117,11 @@ def schedule_packages(
             continue
 
         work_days_scanned += 1
-        busy_named = busy_intervals_for_day(current, events)
+        busy_named = busy_intervals_for_day(current, events, wh)
         busy_only = [b for _, b in busy_named]
-        windows = work_window_intervals(current)
+        windows = work_window_intervals(current, wh)
         unoccupied = unoccupied_hours_in_windows(windows, busy_only)
-        slots = free_hour_slots(current, busy_only)
+        slots = free_hour_slots(current, busy_only, wh)
         cap = min(len(slots), max_assignable_hours(unoccupied, min_buffer))
 
         day_assignments: list[AssignedBlock] = []
@@ -184,6 +188,7 @@ def schedule_packages(
         all_blocks=merged_blocks,
         prefix_display=primary_prefix(packages),
         daily_buffer_hours=min_buffer,
+        work_hours=wh,
     )
 
 

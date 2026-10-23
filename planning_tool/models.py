@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+from planning_tool.work_hours import WorkDayConfig
 
 
 @dataclass(frozen=True)
@@ -61,6 +63,7 @@ class ScheduleResult:
     all_blocks: list[AssignedBlock]
     prefix_display: str
     daily_buffer_hours: float = 1.0
+    work_hours: WorkDayConfig | None = None
 
     @property
     def total_hours(self) -> int:

@@ -8,6 +8,7 @@ from planning_tool.models import ScheduleResult
 from planning_tool.output import build_ics, build_markdown_report
 from planning_tool.scheduler import resolve_schedule_start, schedule_packages
 from planning_tool.tasks import load_work_packages
+from planning_tool.work_hours import WorkDayConfig
 
 
 def today_local() -> date:
@@ -40,6 +41,7 @@ def run_schedule(
     reference_date: date | None = None,
     start_date: date | None = None,
     daily_buffer_hours: float = 1.0,
+    work_hours: WorkDayConfig | None = None,
 ) -> ScheduleResult:
     if not tasks_path.is_file():
         raise FileNotFoundError(f"任务文件不存在: {tasks_path}")
@@ -59,6 +61,7 @@ def run_schedule(
         ref,
         start_date=start_date,
         daily_buffer_hours=daily_buffer_hours,
+        work_hours=work_hours,
     )
 
     report_path.write_text(build_markdown_report(result), encoding="utf-8")

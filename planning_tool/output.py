@@ -27,6 +27,11 @@ def format_conclusion(result: ScheduleResult) -> str:
         f"- **起始排期日**：{result.start_date.isoformat()}（{_weekday_label(result.start_date)}）\n"
         f"- **前缀标识**：{result.prefix_display}\n"
         f"- **每日预留灵活时间**：{result.daily_buffer_hours:g}h\n"
+        + (
+            f"- **工作时段**：{result.work_hours.label_work()}（午餐 {result.work_hours.label_lunch()} 不排任务）\n"
+            if result.work_hours
+            else ""
+        )
         f"- **工作包数量**：{len(result.packages)} 个\n"
         f"- **总工时**：{result.total_hours}h\n"
         f"- **排期覆盖**：{span_days} 个工作日历天（其中 {work_days} 天有工作安排）\n"
@@ -39,10 +44,15 @@ def format_daily_sections(result: ScheduleResult) -> str:
     for dp in result.day_plans:
         if not dp.assignments and not dp.busy_in_window:
             continue
+        wh_label = (
+            result.work_hours.label_work()
+            if result.work_hours
+            else "08:00-17:00"
+        )
         lines = [
             f"### {dp.day.isoformat()}（{_weekday_label(dp.day)}）",
             "",
-            "**Outlook 已占用时段（08:00–17:00 内）**",
+            f"**Outlook 已占用时段（{wh_label} 内）**",
         ]
         if dp.busy_in_window:
             for subj, iv in dp.busy_in_window:
