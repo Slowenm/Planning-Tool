@@ -4,6 +4,12 @@ cd /d "%~dp0\.."
 
 echo 演示排期（不读 Outlook，使用 examples\tasks_template.csv）...
 call "%~dp0plan-work.bat" --tasks examples\tasks_template.csv --calendar none
+set RC=%ERRORLEVEL%
 echo.
-echo 已生成 schedule.md 与 schedule.ics（在本文件夹根目录）
+if %RC%==0 (
+  echo OK: schedule.md and schedule.ics in project folder.
+) else (
+  echo FAILED exit code %RC%. Try Run-Demo-Cli.bat or python -m planning_tool.cli ...
+)
 pause
+exit /b %RC%
