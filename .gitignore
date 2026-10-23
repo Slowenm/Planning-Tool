@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+schedule.md
+schedule.ics
+.env-mode
+.conda-base
+.outlook-tz
+install-last.log
+offline/wheels/*.whl
+dist/
+!dist/.gitkeep
+build/
+.DS_Store

@@ -1,0 +1,11 @@
+After unzip, these should exist in THIS folder (Planning-Tool-x.x.x-windows-portable):
+
+  Install-Offline.bat
+  Run-Demo.bat
+  Run-With-Outlook.bat
+  Save-Conda-Path.bat   (or Write-CondaBase.bat / windows\Save-Conda-Path.bat)
+  planning_tool\        (folder)
+  offline\wheels\       (many .whl files, total zip ~8-9 MB)
+
+If Save-Conda-Path.bat is missing but Install-Offline.bat succeeded,
+check hidden file .conda-base — you may not need Save-Conda-Path at all.
