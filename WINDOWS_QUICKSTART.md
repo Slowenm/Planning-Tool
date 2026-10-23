@@ -68,6 +68,18 @@ python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlo
 
 若 `plan-work` 提示找不到命令，**属正常**：请用 `python -m planning_tool.cli`，或双击 **Run-Demo.bat**（已自动使用该方式）。
 
+### 公司网络 / pip 401（Credentials not correct）
+
+Many corporate PCs set a **private pip mirror** in `%APPDATA%\pip\pip.ini` or `%USERPROFILE%\.pip\pip.conf`. When credentials expire, `pip install` fails with **401**.
+
+在本项目目录、已 `conda activate planning-tool` 时执行：
+
+```bat
+pip install -e ".[outlook]" --index-url https://pypi.org/simple
+```
+
+若仍失败，可能是外网被拦，需要连 VPN 或联系 IT。安装脚本（v0.1.5+）已默认带 `--index-url https://pypi.org/simple`。
+
 **已有 Conda 环境、不想新建 `planning-tool`：** 在任意已激活环境中进入项目目录，执行 `pip install -e ".[outlook]"`，然后用 `python -m planning_tool.cli ...` 即可（不经过 bat）。
 
 **模式说明：** 安装成功后会在项目根目录生成 **`.env-mode`**（内容为 `conda` 或 `venv`），`plan-work.bat` 据此选择 Conda 或 `.venv`。若误用了另一种安装方式，删除 `.env-mode` 后重新运行对应的 install 脚本。
@@ -98,6 +110,7 @@ windows\plan-work.bat --tasks tasks.csv --calendar none
 |------|------|
 | 安装完黑窗口立刻消失 | 新版根目录 **Install-Conda.bat** 结束时会 **pause**；也可双击 **Verify-Install.bat** 检查是否装好 |
 | 不确定是否安装成功 | 看根目录是否有 **`.env-mode`**（内容为 `conda`）；或打开 **`install-last.log`** |
+| pip **401 Credentials not correct** | 公司 pip 镜像凭证失效；改用公网 PyPI：`pip install -e ".[outlook]" --index-url https://pypi.org/simple`（见下节） |
 | 找不到 python / conda | 官方 Python：勾选 PATH；Conda：用 **Anaconda Prompt** 运行 `install-conda.bat` |
 | Conda 下双击 bat 失败 | 先运行 `install-conda.bat`；或 Prompt 里 `conda activate planning-tool` 再运行命令 |
 | Outlook COM 报错 | 先打开 Outlook；以普通用户运行 bat（非管理员试一次） |

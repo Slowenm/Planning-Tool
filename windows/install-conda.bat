@@ -36,14 +36,15 @@ if errorlevel 1 (
 
 echo [2/3] 在 planning-tool 环境中安装本项目（含 pywin32 / Outlook COM）...
 echo [2/3] pip install...>> "%LOG%"
-conda run -n planning-tool --no-capture-output python -m pip install -U pip setuptools wheel
+set "PIP_INDEX=--index-url https://pypi.org/simple"
+conda run -n planning-tool --no-capture-output python -m pip install -U pip setuptools wheel %PIP_INDEX%
 if errorlevel 1 (
   echo [错误] pip 升级失败。>> "%LOG%"
   echo [错误] pip 升级失败。
   pause
   exit /b 1
 )
-conda run -n planning-tool --no-capture-output pip install -e ".[outlook]"
+conda run -n planning-tool --no-capture-output pip install -e ".[outlook]" %PIP_INDEX%
 if errorlevel 1 (
   echo [错误] pip 安装失败。>> "%LOG%"
   echo [错误] pip 安装失败。

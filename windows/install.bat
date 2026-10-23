@@ -22,8 +22,9 @@ if not exist .venv\Scripts\python.exe (
 
 echo [2/3] 安装依赖（含 Outlook COM / pywin32）...
 call .venv\Scripts\activate.bat
-python -m pip install -U pip setuptools wheel
-pip install -e ".[outlook]"
+set "PIP_INDEX=--index-url https://pypi.org/simple"
+python -m pip install -U pip setuptools wheel %PIP_INDEX%
+pip install -e ".[outlook]" %PIP_INDEX%
 if errorlevel 1 (
   echo [错误] 安装失败。
   pause
