@@ -51,6 +51,15 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo [3/3] 验证 python -m planning_tool.cli ...
+conda run -n planning-tool --no-capture-output python -m planning_tool.cli --help >nul 2>&1
+if errorlevel 1 (
+  echo [错误] 安装后仍无法运行 planning_tool.cli，请把 install-last.log 发给维护者。>> "%LOG%"
+  echo [错误] 安装后仍无法运行 planning_tool.cli
+  pause
+  exit /b 1
+)
+
 echo conda> .env-mode
 echo [3/3] 完成。已写入 .env-mode=conda>> "%LOG%"
 echo [3/3] 完成。已写入 .env-mode=conda
@@ -59,5 +68,6 @@ echo 之后可用 Run-With-Outlook.bat 读 Outlook 并排期
 echo.
 echo 也可在 Anaconda Prompt 中手动：
 echo   conda activate planning-tool
-echo   plan-work --tasks examples\tasks_template.csv --calendar none
+echo   python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar none
+if /i not "%~1"=="--from-wrapper" pause
 exit /b 0

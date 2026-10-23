@@ -6,6 +6,7 @@ __pycache__/
 schedule.md
 schedule.ics
 .env-mode
+install-last.log
 dist/
 !dist/.gitkeep
 build/

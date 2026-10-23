@@ -62,8 +62,11 @@ windows\install-conda.bat
 
 ```bat
 conda activate planning-tool
-plan-work --tasks examples\tasks_template.csv --calendar outlook
+pip install -e ".[outlook]"
+python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlook
 ```
+
+若 `plan-work` 提示找不到命令，**属正常**：请用 `python -m planning_tool.cli`，或双击 **Run-Demo.bat**（已自动使用该方式）。
 
 **已有 Conda 环境、不想新建 `planning-tool`：** 在任意已激活环境中进入项目目录，执行 `pip install -e ".[outlook]"`，然后用 `python -m planning_tool.cli ...` 即可（不经过 bat）。
 

@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 title Planning-Tool Install (Conda)
-call "%~dp0windows\install-conda.bat"
+call "%~dp0windows\install-conda.bat" --from-wrapper
 set RC=%ERRORLEVEL%
 echo.
 if %RC%==0 (
