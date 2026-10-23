@@ -35,7 +35,7 @@ def load_calendar(
     if source == "outlook":
         from planning_tool.outlook_com import load_events_from_outlook
 
-        return load_events_from_outlook(range_start, range_end)
+        return load_events_from_outlook(range_start, range_end, verbose=False)
     raise SystemExit(f"未知 calendar 来源: {source}")
 
 
