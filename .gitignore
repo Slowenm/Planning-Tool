@@ -6,4 +6,6 @@ __pycache__/
 schedule.md
 schedule.ics
 dist/
+!dist/.gitkeep
 build/
+.DS_Store
