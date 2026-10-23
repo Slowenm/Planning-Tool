@@ -9,7 +9,7 @@ echo.
 if %RC%==0 (
   echo OK: schedule.md and schedule.ics in project folder.
 ) else (
-  echo FAILED exit code %RC%. Try Run-Demo-Cli.bat or python -m planning_tool.cli ...
+  echo FAILED exit code %RC%. Try Test-Cli.bat or python -m planning_tool.cli ...
 )
 pause
 exit /b %RC%

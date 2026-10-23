@@ -16,6 +16,20 @@
    - **官方 Python / venv**：双击根目录 **`Install.bat`**
 3. 双击根目录 **`Run-Demo.bat`**，确认生成 `schedule.md` 和 `schedule.ics`
 
+### 解压后应看到的主要文件
+
+| 类型 | 路径 |
+|------|------|
+| 图形界面 | **`Planning-Tool-GUI.bat`** |
+| 安装 | **`Install-Offline.bat`**（内网推荐）、`Install-Conda.bat`、`Install.bat` |
+| 试跑 / 排期 | **`Run-Demo.bat`**、`Run-With-Outlook.bat`（拖 xlsx）、`Run-Outlook-Cli.bat` |
+| 检查 / 修复 | `Verify-Install.bat`、`Repair-Install.bat`、`Test-Outlook.bat` |
+| 程序与依赖 | **`planning_tool\`**、`offline\wheels\*.whl`（完整包约 9MB） |
+| 示例任务 | `examples\tasks_template.csv` |
+| 说明 | **`WINDOWS_QUICKSTART.md`**、`docs\Planning_Skill_V2.md` |
+
+高级脚本在 **`windows\`** 子目录（如 `windows\plan-work.bat`）；根目录 bat 会转发到那里。
+
 ### 整包复制到新位置（便携）
 
 - 所有脚本会先 **`cd` 到 bat 所在目录**，并自动设置 **`PLANNING_TOOL_ROOT` / `PYTHONPATH`**，**不要求**固定装在某个盘符路径。
@@ -23,7 +37,7 @@
 - 复制到新文件夹后：一般直接双击 **`Planning-Tool-GUI.bat`** / **`Run-Demo.bat`** 即可。
 - 若曾在旧路径做过 **`pip install -e`**，移动后命令行偶发仍指向旧目录：在新文件夹双击 **`Repair-Install.bat`** 或 **`Install-Offline.bat`** 重装一次即可。
 
-## 图形界面（v0.2.0+）
+## 图形界面
 
 双击 **`Planning-Tool-GUI.bat`**：
 
@@ -78,7 +92,7 @@ windows\install-conda.bat
 
 ```bat
 conda activate planning-tool
-pip install -e ".[outlook]"
+pip install ".[outlook]"
 python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlook
 ```
 
@@ -92,7 +106,7 @@ python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlo
 
 安装完成后根目录会有 **`.outlook-tz`**，内容为 `system`。正式排期 / `Test-Outlook.bat` 会自动使用该设置。
 
-仅当与 Outlook 仍差 8 小时时，才改为 `utc` 或 `asia_shanghai`（见 v0.1.14 说明）。
+仅当与 Outlook 仍差 8 小时时，编辑根目录 **`.outlook-tz`** 为单行 `utc` 或 `asia_shanghai`，再跑 **`Test-Outlook.bat`** 核对。
 
 ### 离线安装（无法解析 pypi.org / 完全断外网）
 
@@ -112,12 +126,12 @@ python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlo
 在本项目目录、已 `conda activate planning-tool` 时执行：
 
 ```bat
-pip install -e ".[outlook]" --index-url https://pypi.org/simple
+pip install ".[outlook]" --index-url https://pypi.org/simple
 ```
 
 若仍失败，可能是外网被拦，需要连 VPN 或联系 IT。安装脚本（v0.1.5+）已默认带 `--index-url https://pypi.org/simple`。
 
-**已有 Conda 环境、不想新建 `planning-tool`：** 在任意已激活环境中进入项目目录，执行 `pip install -e ".[outlook]"`，然后用 `python -m planning_tool.cli ...` 即可（不经过 bat）。
+**已有 Conda 环境、不想新建 `planning-tool`：** 在任意已激活环境中进入项目目录，执行 `pip install ".[outlook]"`，然后用 `python -m planning_tool.cli ...` 即可（不经过 bat）。
 
 **模式说明：** 安装成功后会在项目根目录生成 **`.env-mode`**（内容为 `conda` 或 `venv`），`plan-work.bat` 据此选择 Conda 或 `.venv`。若误用了另一种安装方式，删除 `.env-mode` 后重新运行对应的 install 脚本。
 
@@ -147,7 +161,7 @@ windows\plan-work.bat --tasks tasks.csv --calendar none
 |------|------|
 | 安装完黑窗口立刻消失 | 新版根目录 **Install-Conda.bat** 结束时会 **pause**；也可双击 **Verify-Install.bat** 检查是否装好 |
 | 不确定是否安装成功 | 看根目录是否有 **`.env-mode`**（内容为 `conda`）；或打开 **`install-last.log`** |
-| pip **401 Credentials not correct** | 公司 pip 镜像凭证失效；改用公网 PyPI：`pip install -e ".[outlook]" --index-url https://pypi.org/simple`（见下节） |
+| pip **401 Credentials not correct** | 公司 pip 镜像凭证失效；改用公网 PyPI：`pip install ".[outlook]" --index-url https://pypi.org/simple`（见下节） |
 | 找不到 python / conda | 官方 Python：勾选 PATH；Conda：用 **Anaconda Prompt** 运行 `install-conda.bat` |
 | Conda 下双击 bat 失败 | 先运行 `install-conda.bat`；或 Prompt 里 `conda activate planning-tool` 再运行命令 |
 | Outlook COM 报错 | 先打开 Outlook；以普通用户运行 bat（非管理员试一次） |
