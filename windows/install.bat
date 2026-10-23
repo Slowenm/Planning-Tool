@@ -13,7 +13,11 @@ if errorlevel 1 (
 echo [1/3] 创建虚拟环境 .venv ...
 if not exist .venv\Scripts\python.exe (
   python -m venv .venv
-  if errorlevel 1 exit /b 1
+  if errorlevel 1 (
+    echo [错误] 创建 .venv 失败。
+    pause
+    exit /b 1
+  )
 )
 
 echo [2/3] 安装依赖（含 Outlook COM / pywin32）...

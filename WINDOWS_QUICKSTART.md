@@ -93,6 +93,8 @@ windows\plan-work.bat --tasks tasks.csv --calendar none
 
 | 现象 | 处理 |
 |------|------|
+| 安装完黑窗口立刻消失 | 新版根目录 **Install-Conda.bat** 结束时会 **pause**；也可双击 **Verify-Install.bat** 检查是否装好 |
+| 不确定是否安装成功 | 看根目录是否有 **`.env-mode`**（内容为 `conda`）；或打开 **`install-last.log`** |
 | 找不到 python / conda | 官方 Python：勾选 PATH；Conda：用 **Anaconda Prompt** 运行 `install-conda.bat` |
 | Conda 下双击 bat 失败 | 先运行 `install-conda.bat`；或 Prompt 里 `conda activate planning-tool` 再运行命令 |
 | Outlook COM 报错 | 先打开 Outlook；以普通用户运行 bat（非管理员试一次） |
