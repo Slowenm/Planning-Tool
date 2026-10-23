@@ -8,6 +8,7 @@ from datetime import date, datetime, time, timedelta
 
 from planning_tool.config import TIMEZONE
 from planning_tool.models import CalendarEvent
+from planning_tool.timezone_utils import naive_to_shanghai
 
 logger = logging.getLogger(__name__)
 
@@ -25,25 +26,25 @@ def _require_win32():
         ) from e
 
 
-def _outlook_time_to_local(value) -> datetime:
-    """Outlook Start/End → Asia/Shanghai (assumes Outlook uses PC local zone)."""
+def _parse_outlook_raw(value) -> datetime:
     if value is None:
         raise ValueError("empty Outlook time")
     if isinstance(value, datetime):
-        dt = value
-    else:
-        # pywintypes.TimeType
-        dt = datetime(
-            int(value.year),
-            int(value.month),
-            int(value.day),
-            int(value.hour),
-            int(value.minute),
-            int(value.second),
-        )
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=TIMEZONE)
-    return dt.astimezone(TIMEZONE)
+        return value.replace(tzinfo=None) if value.tzinfo else value
+    return datetime(
+        int(value.year),
+        int(value.month),
+        int(value.day),
+        int(value.hour),
+        int(value.minute),
+        int(value.second),
+    )
+
+
+def _outlook_time_to_local(value) -> datetime:
+    """COM naive time → Asia/Shanghai aware (see PLANNING_OUTLOOK_NAIVE_TZ)."""
+    naive = _parse_outlook_raw(value)
+    return naive_to_shanghai(naive)
 
 
 def _collect_from_items(items, start_bound: datetime, end_bound: datetime) -> tuple[list[CalendarEvent], list[str]]:
@@ -103,9 +104,8 @@ def load_events_from_outlook(
         pass
 
     calendar = namespace.GetDefaultFolder(OL_FOLDER_CALENDAR)
-    cal_name = str(getattr(calendar, "Name", "Calendar"))
     if verbose:
-        logger.info("Outlook calendar folder: %s", cal_name)
+        logger.info("Outlook calendar folder: %s", getattr(calendar, "Name", "Calendar"))
 
     items = calendar.Items
     items.IncludeRecurrences = True
@@ -114,7 +114,6 @@ def load_events_from_outlook(
     all_warnings: list[str] = []
     events: list[CalendarEvent] = []
 
-    # Restrict (US-style filter; works on many regional Outlook installs)
     try:
         filt = (
             f"[Start] >= '{range_start.strftime('%m/%d/%Y')}' AND "
@@ -125,14 +124,13 @@ def load_events_from_outlook(
         events, w = _collect_from_items(restricted, start_bound, end_bound)
         all_warnings.extend(w)
         if verbose:
-            logger.info("Restrict returned %s events (filter=%s)", len(events), filt)
+            logger.info("Restrict returned %s events", len(events))
     except Exception as ex:
         all_warnings.append(f"Restrict failed: {ex!r}")
 
-    # Fallback: linear scan (if Restrict empty or failed)
     if not events:
         if verbose:
-            logger.info("Fallback: scanning sorted calendar items …")
+            logger.info("Fallback: full calendar scan")
         events, w = _collect_from_items(items, start_bound, end_bound)
         all_warnings.extend(w)
 

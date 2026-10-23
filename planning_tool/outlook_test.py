@@ -10,6 +10,7 @@ from pathlib import Path
 from planning_tool.calendar_filter import busy_intervals_for_day, is_canceled, is_ignored_all_day
 from planning_tool.config import TIMEZONE
 from planning_tool.scheduler import scheduling_start
+from planning_tool.timezone_utils import describe_system_tz, get_outlook_naive_mode
 
 
 def _today() -> date:
@@ -17,20 +18,27 @@ def _today() -> date:
 
 
 def build_report(events: list, range_start: date, range_end: date) -> str:
+    sys_tz = describe_system_tz()
     lines = [
         "# Outlook 日历读取测试报告",
         "",
-        f"- 查询区间（本地日期）: **{range_start}** ~ **{range_end}**（Asia/Shanghai）",
+        f"- 查询区间（排期用）: **{range_start}** ~ **{range_end}**（**Asia/Shanghai 东八区**）",
+        f"- 工作窗: 08:00–17:00 **东八区**",
         f"- 原始事件数: **{len(events)}**",
+        f"- PC 系统时区: **{sys_tz}**",
+        f"- Outlook COM 解释模式 `PLANNING_OUTLOOK_NAIVE_TZ`: **{get_outlook_naive_mode()}**",
         "",
-        "## 1. 原始事件（Outlook COM）",
+        "> 若「占用时段」比 Outlook 里看到的早/晚 8 小时：在运行前执行  "
+        "> `set PLANNING_OUTLOOK_NAIVE_TZ=utc` 或 `set PLANNING_OUTLOOK_NAIVE_TZ=asia_shanghai` 再重跑本测试。",
         "",
-        "| 开始 | 结束 | 全天 | 主题 |",
+        "## 1. 事件时间（已转为东八区后，用于排期）",
+        "",
+        "| 开始 (UTC+8) | 结束 (UTC+8) | 全天 | 主题 |",
         "|------|------|------|------|",
     ]
     for ev in sorted(events, key=lambda e: e.start):
         lines.append(
-            f"| {ev.start.strftime('%Y-%m-%d %H:%M')} | {ev.end.strftime('%Y-%m-%d %H:%M')} | "
+            f"| {ev.start.strftime('%Y-%m-%d %H:%M %Z')} | {ev.end.strftime('%Y-%m-%d %H:%M %Z')} | "
             f"{'Y' if ev.all_day else 'N'} | {ev.subject.replace('|', '/')} |"
         )
 
@@ -111,7 +119,18 @@ def main(argv: list[str] | None = None) -> int:
         help="报告输出路径",
     )
     parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument(
+        "--outlook-tz",
+        choices=("system", "utc", "asia_shanghai"),
+        default=None,
+        help="覆盖 PLANNING_OUTLOOK_NAIVE_TZ，测试 COM 时间解释方式",
+    )
     args = parser.parse_args(argv)
+
+    if args.outlook_tz:
+        import os
+
+        os.environ["PLANNING_OUTLOOK_NAIVE_TZ"] = args.outlook_tz
 
     ref = _today()
     range_start = (
@@ -122,7 +141,14 @@ def main(argv: list[str] | None = None) -> int:
     range_end = range_start + timedelta(days=max(args.days, 1))
 
     try:
-        from planning_tool.outlook_com import load_events_from_outlook
+        if args.outlook_tz:
+            import importlib
+            import planning_tool.outlook_com as oc
+
+            importlib.reload(oc)
+            load_events_from_outlook = oc.load_events_from_outlook
+        else:
+            from planning_tool.outlook_com import load_events_from_outlook
 
         events = load_events_from_outlook(
             range_start, range_end, verbose=args.verbose
