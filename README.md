@@ -23,9 +23,9 @@ Windows **桌面 Outlook** 工作包排期 CLI：读取固定模板的任务表�
 
 在 GitHub **[Releases](https://github.com/Slowenm/Planning-Tool/releases)** 下载 `Planning-Tool-*-windows-portable.zip`，解压后阅读 **`WINDOWS_QUICKSTART.md`**：
 
-1. **Anaconda**：在 Anaconda Prompt 中运行 `windows\install-conda.bat`  
-   **或官方 Python**：双击 `windows\install.bat`
-2. 双击 `windows\run-demo.bat` 试跑
+1. **Anaconda**：双击根目录 **`Install-Conda.bat`**（或在 Anaconda Prompt 里先 `cd /d "解压路径"` 再运行 `windows\install-conda.bat`；路径含空格必须加引号）  
+   **或官方 Python**：双击 **`Install.bat`**
+2. 双击 **`Run-Demo.bat`** 试跑
 3. 正式使用：拖任务表到 `windows\run-with-outlook.bat`，或见快速开始文档
 
 ## 安装（开发者 / git clone）

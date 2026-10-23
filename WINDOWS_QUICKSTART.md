@@ -10,11 +10,34 @@
 
 ## 第一次使用
 
-1. 解压 ZIP 到任意文件夹（路径尽量不含中文空格问题；若有空格也可试）
-2. 安装依赖（只选一种）：
-   - **Anaconda**：见下一节 **`install-conda.bat`**
-   - **官方 Python / venv**：双击 **`windows\install.bat`**
-3. 双击 **`windows\run-demo.bat`**，确认生成根目录下的 `schedule.md` 和 `schedule.ics`
+1. 解压 ZIP 到任意文件夹（**路径可以含空格**，例如 `10. Module`）
+2. 安装依赖（只选一种，**推荐在资源管理器中双击**，避免 cmd 路径被截断）：
+   - **Anaconda**：双击根目录 **`Install-Conda.bat`**
+   - **官方 Python / venv**：双击根目录 **`Install.bat`**
+3. 双击根目录 **`Run-Demo.bat`**，确认生成 `schedule.md` 和 `schedule.ics`
+
+### 若必须在 cmd / Anaconda Prompt 里输入命令
+
+路径含空格时**整段路径必须加英文双引号**，且先 `cd` 到解压目录：
+
+```bat
+cd /d "C:\Users\你\Desktop\...\Planning-Tool-0.1.1-windows-portable"
+windows\install-conda.bat
+```
+
+**错误示例**（会在空格处截断，出现 `'...\10.' is not recognized`）：
+
+```bat
+C:\Users\...\10. Module\...\windows\install-conda.bat
+```
+
+**正确示例**：
+
+```bat
+"C:\Users\...\10. Module\...\windows\install-conda.bat"
+```
+
+或先 `cd /d "..."` 再 `windows\install-conda.bat`。
 
 ## Anaconda / Miniconda 用户（已适配）
 
@@ -24,13 +47,16 @@
 
 1. 开始菜单打开 **Anaconda Prompt**（或 Miniconda Prompt）
 2. `cd /d` 到解压后的目录
-3. 运行：
+3. 运行（任选其一）：
 
 ```bat
+cd /d "你的解压目录（含空格请加引号）"
 windows\install-conda.bat
 ```
 
-4. 同一目录下双击 **`run-demo.bat`** / **`run-with-outlook.bat`** 即可（内部用 `conda run -n planning-tool`，无需每次手动 `activate`）
+或在资源管理器中 **双击根目录 `Install-Conda.bat`**（最简单）。
+
+4. 双击根目录 **`Run-Demo.bat`** / **`Run-With-Outlook.bat`**（内部用 `conda run -n planning-tool`，无需每次手动 `activate`）
 
 **手动使用（可选）：**
 

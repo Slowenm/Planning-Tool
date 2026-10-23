@@ -9,6 +9,7 @@ if errorlevel 1 (
   echo 然后在该窗口执行：
   echo   cd /d "%CD%"
   echo   windows\install-conda.bat
+  echo 或直接双击解压目录下的 Install-Conda.bat
   pause
   exit /b 1
 )
