@@ -7,14 +7,14 @@ set "LOG=%CD%\install-last.log"
 echo === install-offline %DATE% %TIME% ===>> "%LOG%"
 
 if not exist "%WHEELS%\*.whl" (
-  echo [ERROR] Missing offline\wheels\*.whl — use the ~9MB v0.1.6+ zip.
+  echo [ERROR] Missing offline\wheels\*.whl — use the ~9MB zip.
   pause
   exit /b 1
 )
 
 where conda >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] conda not found. Open Anaconda Prompt and run Install-Offline.bat again.
+  echo [ERROR] conda not found. Open Anaconda Prompt.
   pause
   exit /b 1
 )
@@ -40,6 +40,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
+echo Using Python:
+where python
+python --version
+
 echo [3/5] Offline pip: setuptools, wheel ...
 python -m pip install --no-index --find-links "%WHEELS%" setuptools wheel
 if errorlevel 1 goto :pip_fail
@@ -50,34 +54,37 @@ if errorlevel 1 goto :pip_fail
 
 echo [5/5] Register this project (offline) ...
 python -m pip install --no-build-isolation --no-index --find-links "%WHEELS%" -e ".[outlook]"
-if errorlevel 1 (
-  echo [WARN] editable install skipped; using PYTHONPATH mode.
-)
+set "PIP_EDIT=%ERRORLEVEL%"
 
 echo conda> .env-mode
 echo offline>> .env-mode
 
-set "PYTHONPATH=%CD%"
-python -m planning_tool.cli --help >nul 2>&1
+echo Verify import ...
+python -c "import planning_tool.cli; print('import OK')"
 if errorlevel 1 (
-  echo [ERROR] planning_tool.cli still not runnable.
-  pause
-  exit /b 1
+  echo [WARN] import failed; retry with PYTHONPATH ...
+  set "PYTHONPATH=%CD%"
+  python -c "import planning_tool.cli; print('import OK with PYTHONPATH')"
+  if errorlevel 1 (
+    echo [ERROR] planning_tool still not importable. Details:
+    python -c "import planning_tool.cli"
+    pause
+    exit /b 1
+  )
 )
+
+if not "%PIP_EDIT%"=="0" (
+  echo [WARN] pip install -e returned %PIP_EDIT% but import works; continuing.
+)
+
+for /f "delims=" %%G in ('conda info --base 2^>nul') do echo %%G> "%CD%\.conda-base"
 
 echo.
-for /f "delims=" %%G in ('conda info --base 2^>nul') do echo %%G> "%CD%\.conda-base"
-if exist "%CD%\.conda-base" (
-  echo [OK] Wrote .conda-base for double-click Outlook runs ^(Save-Conda-Path.bat optional^)
-) else (
-  echo [WARN] Could not write .conda-base — run Save-Conda-Path.bat from Anaconda Prompt later.
-)
-
-echo [OK] Offline install done. Double-click Run-Demo.bat next.
+echo [OK] Offline install done. Next: Run-Demo.bat
 if /i not "%~1"=="--from-wrapper" pause
 exit /b 0
 
 :pip_fail
-echo [ERROR] pip failed. See messages above. Log: %LOG%
+echo [ERROR] pip failed. Log: %LOG%
 pause
 exit /b 1
