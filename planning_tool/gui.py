@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import traceback
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from tkinter import (
     END,
@@ -25,6 +25,7 @@ from tkinter import (
     ttk,
 )
 
+from planning_tool.gui_calendar import DatePickerDialog
 from planning_tool.runner import run_schedule, today_local
 from planning_tool.scheduler import resolve_schedule_start
 
@@ -39,7 +40,7 @@ class PlanningApp:
 
         self.root = tk.Tk()
         self.root.title("Planning-Tool 工作包排期")
-        self.root.minsize(640, 520)
+        self.root.minsize(680, 560)
 
         self.tasks_path = StringVar()
         self.output_dir = StringVar(value=str(Path.cwd()))
@@ -49,6 +50,7 @@ class PlanningApp:
 
         self._build()
         self._load_outlook_tz()
+        self.calendar.trace_add("write", lambda *_: self._update_ics_row_state())
 
     def _load_outlook_tz(self) -> None:
         tool_root = Path(__file__).resolve().parent.parent
@@ -67,53 +69,80 @@ class PlanningApp:
         Label(frm, text="任务表 (.xlsx / .csv):").grid(row=row, column=0, sticky="w", **pad)
         tasks_row = Frame(frm)
         tasks_row.grid(row=row, column=1, sticky="ew", **pad)
-        Entry(tasks_row, textvariable=self.tasks_path, width=52).pack(
+        Entry(tasks_row, textvariable=self.tasks_path, width=48).pack(
             side=LEFT, fill=X, expand=True
         )
-        Button(tasks_row, text="浏览…", command=self._browse_tasks).pack(side=RIGHT, padx=4)
+        Button(tasks_row, text="浏览…", command=self._browse_tasks).pack(side=RIGHT, padx=2)
 
         row += 1
         Label(frm, text="输出目录:").grid(row=row, column=0, sticky="w", **pad)
         out_row = Frame(frm)
         out_row.grid(row=row, column=1, sticky="ew", **pad)
-        Entry(out_row, textvariable=self.output_dir, width=52).pack(
+        Entry(out_row, textvariable=self.output_dir, width=40).pack(
             side=LEFT, fill=X, expand=True
         )
-        Button(out_row, text="浏览…", command=self._browse_output).pack(side=RIGHT, padx=4)
+        Button(out_row, text="浏览…", command=self._browse_output).pack(side=RIGHT, padx=2)
+        Button(out_row, text="打开目录", command=self._open_output_dir).pack(side=RIGHT, padx=2)
 
         row += 1
         Label(frm, text="排期开始日期:").grid(row=row, column=0, sticky="w", **pad)
         sd_row = Frame(frm)
         sd_row.grid(row=row, column=1, sticky="w", **pad)
-        Entry(sd_row, textvariable=self.start_date, width=14).pack(side=LEFT)
-        Label(
-            sd_row,
-            text="  (YYYY-MM-DD，东八区；遇周末自动顺延到周一)",
-            fg="#555",
-        ).pack(side=LEFT)
+        Entry(sd_row, textvariable=self.start_date, width=12).pack(side=LEFT)
+        Button(sd_row, text="选日期…", command=self._pick_start_date).pack(side=LEFT, padx=6)
+        Label(sd_row, text="东八区；选到周末自动顺延到周一", fg="#555").pack(side=LEFT)
 
         row += 1
-        Label(frm, text="Outlook 日历:").grid(row=row, column=0, sticky="w", **pad)
-        cal_row = Frame(frm)
-        cal_row.grid(row=row, column=1, sticky="w", **pad)
+        Label(frm, text="会议占用来源:").grid(row=row, column=0, sticky="nw", **pad)
+        cal_block = Frame(frm)
+        cal_block.grid(row=row, column=1, sticky="w", **pad)
         ttk.Combobox(
-            cal_row,
+            cal_block,
             textvariable=self.calendar,
             values=("outlook", "ics", "none"),
             state="readonly",
-            width=12,
-        ).pack(side=LEFT)
-        Label(cal_row, text="  ICS 文件:").pack(side=LEFT, padx=(12, 0))
-        Entry(cal_row, textvariable=self.ics_calendar, width=28).pack(side=LEFT, padx=4)
-        Button(cal_row, text="…", command=self._browse_ics).pack(side=LEFT)
+            width=14,
+        ).pack(anchor="w")
+        Label(
+            cal_block,
+            text="outlook = 实时读桌面 Outlook  |  ics = 用下方「导入用 ICS」  |  none = 不避让会议",
+            fg="#555",
+            wraplength=480,
+            justify="left",
+        ).pack(anchor="w", pady=(4, 0))
 
         row += 1
-        Label(frm, text="输出文件:").grid(row=row, column=0, sticky="w", **pad)
-        Label(
+        Label(frm, text="导入用 ICS:").grid(row=row, column=0, sticky="w", **pad)
+        self.ics_row = Frame(frm)
+        self.ics_row.grid(row=row, column=1, sticky="ew", **pad)
+        self.ics_entry = Entry(self.ics_row, textvariable=self.ics_calendar, width=48)
+        self.ics_entry.pack(side=LEFT, fill=X, expand=True)
+        Button(self.ics_row, text="浏览…", command=self._browse_ics).pack(side=RIGHT, padx=2)
+        row += 1
+        self.ics_hint = Label(
             frm,
-            text="schedule.md  +  schedule.ics（保存在输出目录）",
+            text="说明：这是从 Outlook「另存/导出」的日历文件，用来读取已有会议（不是排期生成的 schedule.ics）。"
+            "仅当「会议占用来源」选 ics 时需要填写。",
+            fg="#666",
+            wraplength=520,
+            justify="left",
+        )
+        self.ics_hint.grid(row=row, column=1, sticky="w", padx=8, pady=(0, 6))
+
+        row += 1
+        Label(frm, text="排期输出文件:").grid(row=row, column=0, sticky="w", **pad)
+        out_hint = Frame(frm)
+        out_hint.grid(row=row, column=1, sticky="w", **pad)
+        Label(
+            out_hint,
+            text="schedule.md（报告） + schedule.ics（导入 Outlook 的计划）→ 保存在输出目录",
             fg="#555",
-        ).grid(row=row, column=1, sticky="w", **pad)
+            wraplength=480,
+            justify="left",
+        ).pack(anchor="w")
+        Button(out_hint, text="打开输出目录", command=self._open_output_dir).pack(
+            anchor="w", pady=(4, 0)
+        )
 
         row += 1
         btn_row = Frame(frm)
@@ -128,17 +157,43 @@ class PlanningApp:
 
         row += 1
         Label(frm, text="日志:").grid(row=row, column=0, sticky="nw", **pad)
-        self.log = Text(frm, height=14, wrap="word")
+        self.log = Text(frm, height=12, wrap="word")
         self.log.grid(row=row, column=1, sticky="nsew", **pad)
         frm.grid_columnconfigure(1, weight=1)
         frm.grid_rowconfigure(row, weight=1)
 
-        self._log("Planning-Tool GUI 就绪。排期前请先打开桌面 Outlook（若选择 outlook）。")
+        self._update_ics_row_state()
+        self._log("就绪。选 outlook 时请先打开桌面 Outlook。")
+
+    def _update_ics_row_state(self) -> None:
+        need = self.calendar.get().strip() == "ics"
+        state = "normal" if need else "disabled"
+        self.ics_entry.config(state=state)
+        if not need:
+            self.ics_hint.config(fg="#999")
+        else:
+            self.ics_hint.config(fg="#666")
 
     def _log(self, msg: str) -> None:
         self.log.insert(END, msg + "\n")
         self.log.see(END)
         self.root.update_idletasks()
+
+    def _open_output_dir(self) -> None:
+        p = Path(self.output_dir.get().strip())
+        if not p.is_dir():
+            messagebox.showwarning("打开目录", f"目录不存在:\n{p}")
+            return
+        os.startfile(p)  # type: ignore[attr-defined]
+
+    def _pick_start_date(self) -> None:
+        try:
+            initial = date.fromisoformat(self.start_date.get().strip())
+        except ValueError:
+            initial = resolve_schedule_start(today_local(), None)
+        picked = DatePickerDialog(self.root, initial).show()
+        if picked:
+            self.start_date.set(picked.isoformat())
 
     def _browse_tasks(self) -> None:
         path = filedialog.askopenfilename(
@@ -158,7 +213,7 @@ class PlanningApp:
 
     def _browse_ics(self) -> None:
         path = filedialog.askopenfilename(
-            title="选择 Outlook 导出的 ICS",
+            title="选择 Outlook 导出的日历 ICS（读会议占用）",
             filetypes=[("iCalendar", "*.ics"), ("All", "*.*")],
         )
         if path:
@@ -182,7 +237,7 @@ class PlanningApp:
             ics_cal = Path(ics_path) if ics_path else None
 
             if cal == "ics" and not ics_cal:
-                raise ValueError("日历来源为 ics 时必须选择 ICS 文件")
+                raise ValueError("会议来源选 ics 时，请选择「导入用 ICS」文件")
 
             self._log("—— 开始排期 ——")
             self._log(f"任务: {tasks}")
@@ -204,7 +259,7 @@ class PlanningApp:
             self._log(f"完成。总工时 {result.total_hours}h，预计结束 {finish} (东八区)")
             self._log(f"已写入: {out_dir / 'schedule.md'}")
             self._log(f"已写入: {out_dir / 'schedule.ics'}")
-            messagebox.showinfo("排期完成", f"已保存到:\n{out_dir}")
+            messagebox.showinfo("排期完成", f"已保存到:\n{out_dir}\n\n可点「打开目录」查看。")
         except Exception as e:
             self._log("错误: " + str(e))
             self._log(traceback.format_exc())

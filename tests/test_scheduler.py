@@ -14,7 +14,7 @@ from planning_tool.scheduler import (
 def test_explicit_start_date():
     ref = date(2026, 10, 20)
     assert resolve_schedule_start(ref, date(2026, 10, 27)) == date(2026, 10, 27)
-    assert resolve_schedule_start(ref, date(2026, 10, 25)) == date(2026, 10, 27)
+    assert resolve_schedule_start(ref, date(2026, 10, 25)) == date(2026, 10, 26)
 
 
 def test_start_skips_weekend():
