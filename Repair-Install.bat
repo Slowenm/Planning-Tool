@@ -1,7 +1,7 @@
 @echo off
 title Planning-Tool Repair (Conda pip only)
 cd /d "%~dp0"
-echo 仅重新执行 pip install -e （不删除 planning-tool 环境）
+echo 在当前目录重新 pip install（不删除 planning-tool 环境；移动文件夹后建议运行一次）
 echo 目录: %CD%
 echo.
 where conda >nul 2>nul

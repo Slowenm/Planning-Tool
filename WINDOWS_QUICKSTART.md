@@ -10,11 +10,18 @@
 
 ## 第一次使用
 
-1. 解压 ZIP 到任意文件夹（**路径可以含空格**，例如 `10. Module`）
+1. 解压 ZIP 到**任意文件夹**（**路径可以含空格**，例如 `10. Module`）
 2. 安装依赖（只选一种，**推荐在资源管理器中双击**，避免 cmd 路径被截断）：
    - **Anaconda**：双击根目录 **`Install-Conda.bat`**
    - **官方 Python / venv**：双击根目录 **`Install.bat`**
 3. 双击根目录 **`Run-Demo.bat`**，确认生成 `schedule.md` 和 `schedule.ics`
+
+### 整包复制到新位置（便携）
+
+- 所有脚本会先 **`cd` 到 bat 所在目录**，并自动设置 **`PLANNING_TOOL_ROOT` / `PYTHONPATH`**，**不要求**固定装在某个盘符路径。
+- 任务表、输出、`schedule.md` / `schedule.ics`、`.outlook-tz` 等都可以放在**同一工具目录**或你自选的路径（GUI 里浏览即可）。
+- 复制到新文件夹后：一般直接双击 **`Planning-Tool-GUI.bat`** / **`Run-Demo.bat`** 即可。
+- 若曾在旧路径做过 **`pip install -e`**，移动后命令行偶发仍指向旧目录：在新文件夹双击 **`Repair-Install.bat`** 或 **`Install-Offline.bat`** 重装一次即可。
 
 ## 图形界面（v0.2.0+）
 

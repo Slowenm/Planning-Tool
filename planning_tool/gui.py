@@ -26,6 +26,7 @@ from tkinter import (
 )
 
 from planning_tool.gui_calendar import DatePickerDialog
+from planning_tool.paths import get_tool_root
 from planning_tool.runner import run_schedule, today_local
 from planning_tool.work_hours import WorkDayConfig
 from planning_tool.scheduler import resolve_schedule_start
@@ -44,7 +45,7 @@ class PlanningApp:
         self.root.minsize(680, 560)
 
         self.tasks_path = StringVar()
-        self.output_dir = StringVar(value=str(Path.cwd()))
+        self.output_dir = StringVar(value=str(get_tool_root()))
         self.start_date = StringVar(value=_default_start_iso())
         self.calendar = StringVar(value="outlook")
         self.ics_calendar = StringVar()
@@ -59,8 +60,7 @@ class PlanningApp:
         self.calendar.trace_add("write", lambda *_: self._update_ics_row_state())
 
     def _load_outlook_tz(self) -> None:
-        tool_root = Path(__file__).resolve().parent.parent
-        tz_file = tool_root / ".outlook-tz"
+        tz_file = get_tool_root() / ".outlook-tz"
         mode = "system"
         if tz_file.is_file():
             mode = tz_file.read_text(encoding="utf-8").strip() or "system"

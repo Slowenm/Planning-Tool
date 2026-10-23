@@ -1,5 +1,6 @@
 @echo off
 cd /d "%~dp0"
+call windows\_tool_env.bat
 call windows\_conda_activate_planning_tool.bat
 if errorlevel 1 (
   echo Activate failed. Use Anaconda Prompt.

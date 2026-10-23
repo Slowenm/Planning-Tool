@@ -52,30 +52,26 @@ echo [4/5] Offline pip: openpyxl, icalendar, tzdata, pywin32 ...
 python -m pip install --no-index --find-links "%WHEELS%" openpyxl icalendar tzdata pywin32
 if errorlevel 1 goto :pip_fail
 
-echo [5/5] Register this project (offline) ...
-python -m pip install --no-build-isolation --no-index --find-links "%WHEELS%" -e ".[outlook]"
-set "PIP_EDIT=%ERRORLEVEL%"
+echo [5/5] Register this project (offline, non-editable — 整包移动后请在本目录重跑安装) ...
+call "%~dp0_tool_env.bat"
+python -m pip install --no-build-isolation --no-index --find-links "%WHEELS%" ".[outlook]"
+set "PIP_PROJ=%ERRORLEVEL%"
 
 echo conda> .env-mode
 echo offline>> .env-mode
 echo system> "%CD%\.outlook-tz"
 
-echo Verify import ...
+echo Verify import (from this folder) ...
 python -c "import planning_tool.cli; print('import OK')"
 if errorlevel 1 (
-  echo [WARN] import failed; retry with PYTHONPATH ...
-  set "PYTHONPATH=%CD%"
-  python -c "import planning_tool.cli; print('import OK with PYTHONPATH')"
-  if errorlevel 1 (
-    echo [ERROR] planning_tool still not importable. Details:
-    python -c "import planning_tool.cli"
-    pause
-    exit /b 1
-  )
+  echo [ERROR] planning_tool not importable from %CD%. Details:
+  python -c "import planning_tool.cli"
+  pause
+  exit /b 1
 )
 
-if not "%PIP_EDIT%"=="0" (
-  echo [WARN] pip install -e returned %PIP_EDIT% but import works; continuing.
+if not "%PIP_PROJ%"=="0" (
+  echo [WARN] pip install returned %PIP_PROJ% but import works; continuing.
 )
 
 for /f "delims=" %%G in ('conda info --base 2^>nul') do echo %%G> "%CD%\.conda-base"

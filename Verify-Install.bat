@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
+call "%~dp0windows\_tool_env.bat"
 
 echo ===== Planning-Tool 安装检查 =====
 echo 目录: %CD%
@@ -21,6 +22,8 @@ if not errorlevel 1 (
   if exist ".env-mode" (
     findstr /i "^conda" .env-mode >nul 2>&1
     if not errorlevel 1 (
+      set "PLANNING_TOOL_ROOT=%CD%"
+      set "PYTHONPATH=%CD%"
       conda run -n planning-tool --no-capture-output python -m planning_tool.cli --help >nul 2>&1
       if errorlevel 1 (
         echo [失败] 无法运行 python -m planning_tool.cli — 请双击 Repair-Install.bat

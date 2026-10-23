@@ -22,6 +22,7 @@ if /i "%RUNTIME%"=="conda" (
     echo [ERROR] activate planning-tool failed. Run Install-Offline.bat
     exit /b 1
   )
+  set "PLANNING_TOOL_ROOT=%ROOT%"
   set "PYTHONPATH=%ROOT%"
   call "%~dp0_set_outlook_tz.bat"
   python -m planning_tool.cli %*

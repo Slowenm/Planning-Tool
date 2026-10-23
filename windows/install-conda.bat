@@ -44,7 +44,8 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-conda run -n planning-tool --no-capture-output pip install -e ".[outlook]" %PIP_INDEX%
+call "%~dp0_tool_env.bat"
+conda run -n planning-tool --no-capture-output pip install ".[outlook]" %PIP_INDEX%
 if errorlevel 1 (
   echo [错误] pip 安装失败。>> "%LOG%"
   echo [错误] pip 安装失败。
@@ -53,6 +54,8 @@ if errorlevel 1 (
 )
 
 echo [3/3] 验证 python -m planning_tool.cli ...
+set "PLANNING_TOOL_ROOT=%CD%"
+set "PYTHONPATH=%CD%"
 conda run -n planning-tool --no-capture-output python -m planning_tool.cli --help >nul 2>&1
 if errorlevel 1 (
   echo [错误] 安装后仍无法运行 planning_tool.cli，请把 install-last.log 发给维护者。>> "%LOG%"
