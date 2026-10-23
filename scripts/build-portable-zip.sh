@@ -15,6 +15,7 @@ copy_tree() {
     --exclude='.git' \
     --exclude='.venv' \
     --exclude='__pycache__' \
+    --exclude='.pytest_cache' \
     --exclude='dist' \
     --exclude='schedule.md' \
     --exclude='schedule.ics' \
