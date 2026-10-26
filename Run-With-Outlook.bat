@@ -1,3 +1,4 @@
 @echo off
 cd /d "%~dp0"
-call "%~dp0windows\run-with-outlook.bat" %*
+set "TOOL_ROOT=%CD%"
+call "%TOOL_ROOT%\windows\run\run-with-outlook.bat" %*

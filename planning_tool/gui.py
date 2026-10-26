@@ -25,7 +25,14 @@ from tkinter import (
     ttk,
 )
 
+from planning_tool.calendar_export import CalendarEventDefaults
 from planning_tool.gui_calendar import DatePickerDialog
+from planning_tool.gui_shared import (
+    add_calendar_event_default_rows,
+    load_event_default_vars,
+    persist_event_default_vars,
+)
+from planning_tool.paths import get_tool_root
 from planning_tool.runner import run_schedule, today_local
 from planning_tool.work_hours import WorkDayConfig
 from planning_tool.scheduler import resolve_schedule_start
@@ -40,11 +47,11 @@ class PlanningApp:
         import tkinter as tk
 
         self.root = tk.Tk()
-        self.root.title("Planning-Tool 工作包排期")
+        self.root.title("Planning-Tool 2.0 — Excel 工作包排期")
         self.root.minsize(680, 560)
 
         self.tasks_path = StringVar()
-        self.output_dir = StringVar(value=str(Path.cwd()))
+        self.output_dir = StringVar(value=str(get_tool_root()))
         self.start_date = StringVar(value=_default_start_iso())
         self.calendar = StringVar(value="outlook")
         self.ics_calendar = StringVar()
@@ -53,14 +60,16 @@ class PlanningApp:
         self.work_end = StringVar(value="17:00")
         self.lunch_start = StringVar(value="12:00")
         self.lunch_end = StringVar(value="13:00")
+        self.event_location = StringVar()
+        self.event_category = StringVar()
+        load_event_default_vars(self.event_location, self.event_category)
 
         self._build()
         self._load_outlook_tz()
         self.calendar.trace_add("write", lambda *_: self._update_ics_row_state())
 
     def _load_outlook_tz(self) -> None:
-        tool_root = Path(__file__).resolve().parent.parent
-        tz_file = tool_root / ".outlook-tz"
+        tz_file = get_tool_root() / ".outlook-tz"
         mode = "system"
         if tz_file.is_file():
             mode = tz_file.read_text(encoding="utf-8").strip() or "system"
@@ -169,6 +178,14 @@ class PlanningApp:
         self.ics_hint.grid(row=row, column=1, sticky="w", padx=8, pady=(0, 6))
 
         row += 1
+        row = add_calendar_event_default_rows(
+            frm,
+            row,
+            self.event_location,
+            self.event_category,
+            pad=pad,
+        )
+
         Label(frm, text="排期输出文件:").grid(row=row, column=0, sticky="w", **pad)
         out_hint = Frame(frm)
         out_hint.grid(row=row, column=1, sticky="w", **pad)
@@ -301,10 +318,21 @@ class PlanningApp:
             self._log("—— 开始排期 ——")
             self._log(f"任务: {tasks}")
             self._log(f"输出: {out_dir}")
+            persist_event_default_vars(self.event_location, self.event_category)
+            event_defaults = CalendarEventDefaults(
+                location=self.event_location.get(),
+                category=self.event_category.get(),
+            ).normalized()
+
             self._log(
                 f"开始日: {start.isoformat()}  工作: {wh.label_work()}  午餐: {wh.label_lunch()}  "
                 f"日缓冲: {buffer_h}h  日历: {cal}"
             )
+            if event_defaults.location or event_defaults.category:
+                self._log(
+                    f"日程默认 Location: {event_defaults.location or '—'}  "
+                    f"Category: {event_defaults.category or '—'}"
+                )
 
             result = run_schedule(
                 tasks,
@@ -316,6 +344,7 @@ class PlanningApp:
                 start_date=start,
                 daily_buffer_hours=buffer_h,
                 work_hours=wh,
+                event_defaults=event_defaults,
             )
             finish = ""
             if result.finish_datetime:

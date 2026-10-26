@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from icalendar import Calendar, Event, vText
 
+from planning_tool.calendar_export import CalendarEventDefaults, apply_calendar_defaults_to_event
 from planning_tool.config import TIMEZONE
 from planning_tool.models import AssignedBlock, ScheduleResult
 
@@ -23,15 +24,16 @@ def format_conclusion(result: ScheduleResult) -> str:
     )
     work_days = len([d for d in result.day_plans if d.assignments])
     span_days = len(result.day_plans)
+    work_line = (
+        f"- **工作时段**：{result.work_hours.label_work()}（午餐 {result.work_hours.label_lunch()} 不排任务）\n"
+        if result.work_hours
+        else ""
+    )
     return (
         f"- **起始排期日**：{result.start_date.isoformat()}（{_weekday_label(result.start_date)}）\n"
         f"- **前缀标识**：{result.prefix_display}\n"
         f"- **每日预留灵活时间**：{result.daily_buffer_hours:g}h\n"
-        + (
-            f"- **工作时段**：{result.work_hours.label_work()}（午餐 {result.work_hours.label_lunch()} 不排任务）\n"
-            if result.work_hours
-            else ""
-        )
+        f"{work_line}"
         f"- **工作包数量**：{len(result.packages)} 个\n"
         f"- **总工时**：{result.total_hours}h\n"
         f"- **排期覆盖**：{span_days} 个工作日历天（其中 {work_days} 天有工作安排）\n"
@@ -142,7 +144,10 @@ def build_markdown_report(result: ScheduleResult) -> str:
     return "\n".join(sections)
 
 
-def build_ics(result: ScheduleResult) -> bytes:
+def build_ics(
+    result: ScheduleResult,
+    event_defaults: CalendarEventDefaults | None = None,
+) -> bytes:
     cal = Calendar()
     cal.add("prodid", "-//Planning Tool//Work Package Scheduler//CN")
     cal.add("version", "2.0")
@@ -164,6 +169,7 @@ def build_ics(result: ScheduleResult) -> bytes:
             f"wp-{block.package.index}-{block.start.isoformat()}@planning-tool"
         )
         ev.add("uid", uid)
+        apply_calendar_defaults_to_event(ev, event_defaults)
         cal.add_component(ev)
 
     buf = StringIO()

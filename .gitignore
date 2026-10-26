@@ -7,7 +7,9 @@ schedule.md
 schedule.ics
 .env-mode
 .conda-base
+.miniforge-base
 .outlook-tz
+.planning-ics-defaults.json
 install-last.log
 offline/wheels/*.whl
 dist/

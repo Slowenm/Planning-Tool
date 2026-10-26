@@ -1,149 +1,73 @@
-# Windows 快速开始（下载解压即用）
+# Planning-Tool 2.0 — Windows 快速开始（Miniforge + Excel 导入）
 
-## 前提
+本工具**只通过 [Miniforge](https://github.com/conda-forge/miniforge)** 运行（conda 环境 **`planning-tool`**）。
 
-- Windows 10/11
-- **Python 3.10+**（二选一）：
-  - 官方 Python：[python.org](https://www.python.org/downloads/)（勾选 **Add to PATH**），或
-  - **Anaconda / Miniconda**（见下方专节）
-- 使用 Outlook 日历时：已安装 **桌面版 Outlook** 并已登录
+## 目录结构（bat）
+
+```
+Planning-Tool-*/
+  Install-Miniforge.bat      ← 第一次：安装环境（含 Excel 2.0 + ALM 0.0）
+  Planning-Tool-GUI.bat      ← Excel 工作包排期
+  ALM-Planning-Tool-GUI.bat  ← ALM CSV 导入排期
+  Run-Demo.bat / ALM-Run-Demo.bat
+  Run-With-Outlook.bat       ← 拖 Excel/CSV（2.0 模板）
+  setup/                     ← 安装维护（离线安装、修复、验证、保存 Miniforge 路径）
+  run/                       ← 额外 CLI 运行方式
+  diagnostics/               ← 测试 Python / Outlook 读取
+  windows/                   ← 内部脚本（install / run / internal，一般勿直接点）
+  planning_tool/             ← 程序代码
+  offline/wheels/            ← 离线依赖（完整 zip ~9MB）
+```
 
 ## 第一次使用
 
-1. 解压 ZIP 到任意文件夹（**路径可以含空格**，例如 `10. Module`）
-2. 安装依赖（只选一种，**推荐在资源管理器中双击**，避免 cmd 路径被截断）：
-   - **Anaconda**：双击根目录 **`Install-Conda.bat`**
-   - **官方 Python / venv**：双击根目录 **`Install.bat`**
-3. 双击根目录 **`Run-Demo.bat`**，确认生成 `schedule.md` 和 `schedule.ics`
+1. 解压到任意目录（路径可含空格）
+2. 双击 **`Install-Miniforge.bat`**
+3. 双击 **`Run-Demo.bat`** 确认生成 `schedule.md` / `schedule.ics`
+4. 正式：**`Planning-Tool-GUI.bat`** 或 **拖 xlsx 到 `Run-With-Outlook.bat`**
 
-## 图形界面（v0.2.0+）
+找不到 conda 时：打开 **Miniforge Prompt** → `cd /d "解压目录"` → 再运行 `Install-Miniforge.bat`。
 
-双击 **`Planning-Tool-GUI.bat`**：
+## setup/ 维护脚本
 
-- 浏览选择 **任务表**、**输出目录**
-- 设置 **排期开始日期**（YYYY-MM-DD，东八区）
-- 选择 Outlook / ICS / 无日历
-- 点击 **开始排期** → 输出目录下生成 `schedule.md` 与 `schedule.ics`
-
-### 若必须在 cmd / Anaconda Prompt 里输入命令
-
-路径含空格时**整段路径必须加英文双引号**，且先 `cd` 到解压目录：
-
-```bat
-cd /d "C:\Users\你\Desktop\...\Planning-Tool-0.1.1-windows-portable"
-windows\install-conda.bat
-```
-
-**错误示例**（会在空格处截断，出现 `'...\10.' is not recognized`）：
-
-```bat
-C:\Users\...\10. Module\...\windows\install-conda.bat
-```
-
-**正确示例**：
-
-```bat
-"C:\Users\...\10. Module\...\windows\install-conda.bat"
-```
-
-或先 `cd /d "..."` 再 `windows\install-conda.bat`。
-
-## Anaconda / Miniconda 用户（已适配）
-
-本工具**不依赖** base 环境，会单独创建 Conda 环境 **`planning-tool`**，与你在 base 里装的包互不干扰。
-
-**推荐步骤：**
-
-1. 开始菜单打开 **Anaconda Prompt**（或 Miniconda Prompt）
-2. `cd /d` 到解压后的目录
-3. 运行（任选其一）：
-
-```bat
-cd /d "你的解压目录（含空格请加引号）"
-windows\install-conda.bat
-```
-
-或在资源管理器中 **双击根目录 `Install-Conda.bat`**（最简单）。
-
-4. 双击根目录 **`Run-Demo.bat`** / **`Run-With-Outlook.bat`**（内部用 `conda run -n planning-tool`，无需每次手动 `activate`）
-
-**手动使用（可选）：**
-
-```bat
-conda activate planning-tool
-pip install -e ".[outlook]"
-python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlook
-```
-
-若 `plan-work` 提示找不到命令，**属正常**：请用 `python -m planning_tool.cli`，或双击 **Run-Demo.bat**（已自动使用该方式）。
-
-### Outlook 时区（与系统时间一致，推荐）
-
-排期工作窗为 **东八区 08:00–17:00**。Outlook COM 读到的时刻先按 **Windows 系统时区** 理解，再换算到东八区（环境变量 **`PLANNING_OUTLOOK_NAIVE_TZ=system`**，默认）。
-
-请把 **Windows 设置 → 时间和语言 → 时区** 设为 **(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐**（与 Outlook 日历里看到的时间一致）。
-
-安装完成后根目录会有 **`.outlook-tz`**，内容为 `system`。正式排期 / `Test-Outlook.bat` 会自动使用该设置。
-
-仅当与 Outlook 仍差 8 小时时，才改为 `utc` 或 `asia_shanghai`（见 v0.1.14 说明）。
-
-### 离线安装（无法解析 pypi.org / 完全断外网）
-
-若报错 **`Failed to resolve 'pypi.org'`** 或 **`getaddrinfo failed`**，说明本机 **DNS/外网到 PyPI 不通**，在线 `pip install` 不可用。
-
-请下载带 **`offline/wheels`** 的完整包（Release 名称含 **offline**，或体积约 **10MB+** 的 zip），解压后：
-
-1. 双击 **`Install-Offline.bat`**（不要用 Install-Conda.bat）
-2. 再双击 **`Run-Demo.bat`**
-
-内网仅 conda 镜像可用时，`conda create` 仍走公司源；**Python 包装依赖** 全部从 `offline\wheels` 本地安装，**不访问 pypi.org**。
-
-### 公司网络 / pip 401（Credentials not correct）
-
-很多公司电脑在 `%APPDATA%\pip\pip.ini` 或 `%USERPROFILE%\.pip\pip.conf` 里配置了**内网 pip 镜像**；凭证过期时会出现 **401**。
-
-在本项目目录、已 `conda activate planning-tool` 时执行：
-
-```bat
-pip install -e ".[outlook]" --index-url https://pypi.org/simple
-```
-
-若仍失败，可能是外网被拦，需要连 VPN 或联系 IT。安装脚本（v0.1.5+）已默认带 `--index-url https://pypi.org/simple`。
-
-**已有 Conda 环境、不想新建 `planning-tool`：** 在任意已激活环境中进入项目目录，执行 `pip install -e ".[outlook]"`，然后用 `python -m planning_tool.cli ...` 即可（不经过 bat）。
-
-**模式说明：** 安装成功后会在项目根目录生成 **`.env-mode`**（内容为 `conda` 或 `venv`），`plan-work.bat` 据此选择 Conda 或 `.venv`。若误用了另一种安装方式，删除 `.env-mode` 后重新运行对应的 install 脚本。
-
-## 正式排期（读 Outlook）
-
-1. 按模板准备 `tasks.csv` 或 `tasks.xlsx`（见 `examples\tasks_template.csv`）
-2. 方式 A：把任务表文件 **拖到** `windows\run-with-outlook.bat` 上  
-3. 方式 B：在解压目录打开 cmd，执行：
-
-```bat
-windows\plan-work.bat --tasks D:\你的路径\tasks.xlsx --calendar outlook
-```
-
-4. 双击 **`schedule.ics`** → 导入 Outlook
-
-## 常用命令
-
-```bat
-windows\plan-work.bat --tasks tasks.xlsx --calendar outlook
-windows\plan-work.bat --tasks tasks.csv --calendar ics --ics-calendar exported.ics
-windows\plan-work.bat --tasks tasks.csv --calendar none
-```
-
-## 故障排查
-
-| 现象 | 处理 |
+| 脚本 | 用途 |
 |------|------|
-| 安装完黑窗口立刻消失 | 新版根目录 **Install-Conda.bat** 结束时会 **pause**；也可双击 **Verify-Install.bat** 检查是否装好 |
-| 不确定是否安装成功 | 看根目录是否有 **`.env-mode`**（内容为 `conda`）；或打开 **`install-last.log`** |
-| pip **401 Credentials not correct** | 公司 pip 镜像凭证失效；改用公网 PyPI：`pip install -e ".[outlook]" --index-url https://pypi.org/simple`（见下节） |
-| 找不到 python / conda | 官方 Python：勾选 PATH；Conda：用 **Anaconda Prompt** 运行 `install-conda.bat` |
-| Conda 下双击 bat 失败 | 先运行 `install-conda.bat`；或 Prompt 里 `conda activate planning-tool` 再运行命令 |
-| Outlook COM 报错 | 先打开 Outlook；以普通用户运行 bat（非管理员试一次） |
-| 不想连 Outlook | 在 Outlook 中「保存日历」为 `.ics`，用 `--calendar ics` |
+| `setup\Install-Offline.bat` | 同根目录 Install-Miniforge（离线） |
+| `setup\Repair-Install.bat` | 重装 |
+| `setup\Verify-Install.bat` | 检查是否装好 |
+| `setup\Save-Miniforge-Path.bat` | 双击 GUI 失败时，写入 `.miniforge-base` |
 
-规则说明见 `docs\Planning_Skill_V2.md`。
+## diagnostics/
+
+| 脚本 | 用途 |
+|------|------|
+| `diagnostics\Test-Cli.bat` | import / `--help` |
+| `diagnostics\Test-Outlook.bat` | 生成 `outlook-calendar-test.md` |
+
+## run/
+
+| 脚本 | 用途 |
+|------|------|
+| `run\Run-Outlook-Cli.bat` | 拖任务表，Outlook CLI 排期 |
+
+## 便携 / 移动文件夹
+
+复制整包后一般直接双击 GUI；异常则在新目录再跑 **`Install-Miniforge.bat`** 或 **`setup\Repair-Install.bat`**。
+
+## 报错 `ModuleNotFoundError: planning_tool` 或路径像 `Python38\python.exe`
+
+说明 bat 没有用 Miniforge 里的 Python，而是误用了**公司/其他目录的 Python 3.8**。本工具需要 **Python 3.10+**（Miniforge 环境 `planning-tool`）。
+
+1. 双击 **`Install-Miniforge.bat`** 完成安装  
+2. 再双击 **`Planning-Tool-GUI.bat`**（内部已改为 `conda run -n planning-tool`，不依赖 PATH 里的 python）  
+3. 仍失败时运行 **`diagnostics\Test-Cli.bat`**，确认输出里的 `sys.executable` 在 Miniforge 目录下  
+
+## Outlook 时区
+
+默认 `.outlook-tz` = `system`。差 8 小时时改为 `utc` 或 `asia_shanghai`，再跑 `diagnostics\Test-Outlook.bat`。
+
+## 在线 pip（可选，需外网）
+
+Miniforge Prompt 中：`windows\install\install-conda.bat`
+
+规则：`docs\Planning_Skill_V2.md`

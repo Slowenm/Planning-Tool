@@ -1,91 +1,43 @@
-# Planning-Tool
+# Planning-Tool 2.0
 
-Windows **桌面 Outlook** 工作包排期 CLI：读取固定模板的任务表（CSV / Excel），结合 Outlook 日历占用（COM 实时读取，或导出的 `.ics`），按 [Planning Skill v2](docs/Planning_Skill_V2.md) 规则生成 **Markdown 报告** 与 **`schedule.ics`**（不自动写回 Outlook，双击 ICS 自行导入）。
+**Excel / CSV 工作包导入与排期工具**（Windows）：从固定模板 Excel 导入任务，结合 Outlook 日历占用自动排期，输出 **Markdown 报告** 与 **`schedule.ics`**（不写回 Outlook，双击 ICS 自行导入）。
 
-## 任务表模板（列 A–D）
+**运行环境： [Miniforge](https://github.com/conda-forge/miniforge)**（conda 环境 `planning-tool`）。不支持 Anaconda 专用安装流程；已移除独立 venv 安装入口。
+
+## 任务表（列 A–D）
 
 | 列 | 名称 | 说明 |
 |----|------|------|
-| A | Main Milestone | 仅展示，排期时**忽略** |
-| B | Prefix | 如 `UBSW02`；可只在首行填写，向下填充 |
-| C | Work Packages | 工作包名称，**自上而下**顺序排期 |
-| D | Time | 工时，如 `2h`、`16h` |
+| A | Main Milestone | 展示用，排期忽略 |
+| B | Prefix | 如 `UBSW02`；支持合并单元格 |
+| C | Work Packages | 工作包名称，自上而下排期 |
+| D | Time | 如 `2h`、`16h` |
 
 示例：`examples/tasks_template.csv`
 
-## 环境要求
+## 下载（Windows）
 
-- Python 3.10+
-- **Windows** + 桌面 Outlook（使用 `--calendar outlook` 时）
-- 时区规则：`Asia/Shanghai`（UTC+8）
+[Releases](https://github.com/Slowenm/Planning-Tool/releases) → **`Planning-Tool-2.0.0-windows-portable.zip`**（或最新 **v2.x** 便携包）
 
-## 下载打包版（Windows 推荐）
+1. 安装 [Miniforge](https://github.com/conda-forge/miniforge/releases)（若尚未安装）
+2. 解压 zip，双击根目录 **`Install-Miniforge.bat`**
+3. 双击 **`Planning-Tool-GUI.bat`** 或 **`Run-Demo.bat`**
 
-在 GitHub **[Releases](https://github.com/Slowenm/Planning-Tool/releases)** 下载 `Planning-Tool-*-windows-portable.zip`，解压后阅读 **`WINDOWS_QUICKSTART.md`**：
+根目录仅保留安装与运行入口；维护脚本在 **`setup/`**，诊断在 **`diagnostics/`**。详见 **`WINDOWS_QUICKSTART.md`**。
 
-1. **Anaconda**：双击根目录 **`Install-Conda.bat`**（或在 Anaconda Prompt 里先 `cd /d "解压路径"` 再运行 `windows\install-conda.bat`；路径含空格必须加引号）  
-   **或官方 Python**：双击 **`Install.bat`**
-2. 双击 **`Run-Demo.bat`** 试跑
-3. 正式使用：拖任务表到 `windows\run-with-outlook.bat`，或见快速开始文档
+**ALM 导入排期（0.0.0）**：同一 zip 内另含 **`ALM-Planning-Tool-GUI.bat`**，见 **`docs/ALM_QUICKSTART.md`**。  
+GitHub Release **v2.1.0** 便携包 = Excel **2.0** + ALM **0.0.0** 合包；`pip`/包版本号仍为 **2.0.0**（Excel 产品线）。
 
-## 安装（开发者 / git clone）
+## CLI 示例
 
-```powershell
-cd Planning-Tool
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e ".[outlook]"
+```bat
+conda activate planning-tool
+cd /d "工具目录"
+call windows\internal\_tool_env.bat
+python -m planning_tool.cli --tasks tasks.xlsx --calendar outlook ^
+  --work-start 08:00 --work-end 17:00 --lunch-start 12:00 --lunch-end 13:00 ^
+  --report schedule.md --ics schedule.ics
 ```
-
-仅生成排期、用导出日历测试时可省略 `[outlook]`：
-
-```powershell
-pip install -e .
-```
-
-## 用法
-
-### 推荐：直接读 Outlook 日历
-
-Outlook 需已登录；首次可能弹出访问确认。
-
-```powershell
-plan-work --tasks D:\path\tasks.xlsx --calendar outlook --report schedule.md --ics schedule.ics
-```
-
-### 备选：Outlook 导出 ICS 再排期
-
-Outlook：**文件 → 保存日历** 导出 `.ics`，然后：
-
-```powershell
-plan-work --tasks tasks.csv --calendar ics --ics-calendar exported.ics
-```
-
-### 无日历（仅按空闲工作日排满规则）
-
-```powershell
-plan-work --tasks tasks.csv --calendar none
-```
-
-### 指定基准日期（默认为今天上海时区）
-
-排期从 **基准日期的明天** 起算（周末则顺延到周一）：
-
-```powershell
-plan-work --tasks tasks.csv --reference-date 2026-10-23
-```
-
-## 输出
-
-1. **`schedule.md`**：核心结论、按日明细、工作包总览表  
-2. **`schedule.ics`**：带 `[Prefix]` 主题与进度后缀，导入 Outlook 即可  
-
-规则摘要：
-
-- 工作日窗口与午餐时段可配置（默认 08:00–17:00、午餐 12:00–13:00；GUI 或 `--work-start` / `--work-end` / `--lunch-start` / `--lunch-end`）  
-- 整小时粒度；会议造成的 **&lt;1h 碎片** 不可排包，计入空余  
-- 每日预留灵活时间可配置（默认 1h；`--daily-buffer-hours` 或 GUI）  
-- 忽略 `Canceled:` / 全天 OoO / ≥24h 全天提醒；其余会议与自留日程均避让  
 
 ## 开发 / 测试（Linux CI）
 
@@ -94,8 +46,4 @@ pip install -e ".[dev]"
 pytest
 ```
 
-Outlook COM 仅在 Windows 上可用；CI 通过单元测试验证排期引擎。
-
-## 调整规则
-
-模板或 Skill 有变更时，在对话中说明即可；需同步修改 `planning_tool/` 与 `docs/Planning_Skill_V2.md`。
+Outlook COM 仅在 Windows 上可用。
