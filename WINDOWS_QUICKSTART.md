@@ -53,6 +53,14 @@ Planning-Tool-*/
 
 复制整包后一般直接双击 GUI；异常则在新目录再跑 **`Install-Miniforge.bat`** 或 **`setup\Repair-Install.bat`**。
 
+## 报错 `ModuleNotFoundError: planning_tool` 或路径像 `Python38\python.exe`
+
+说明 bat 没有用 Miniforge 里的 Python，而是误用了**公司/其他目录的 Python 3.8**。本工具需要 **Python 3.10+**（Miniforge 环境 `planning-tool`）。
+
+1. 双击 **`Install-Miniforge.bat`** 完成安装  
+2. 再双击 **`Planning-Tool-GUI.bat`**（内部已改为 `conda run -n planning-tool`，不依赖 PATH 里的 python）  
+3. 仍失败时运行 **`diagnostics\Test-Cli.bat`**，确认输出里的 `sys.executable` 在 Miniforge 目录下  
+
 ## Outlook 时区
 
 默认 `.outlook-tz` = `system`。差 8 小时时改为 `utc` 或 `asia_shanghai`，再跑 `diagnostics\Test-Outlook.bat`。
