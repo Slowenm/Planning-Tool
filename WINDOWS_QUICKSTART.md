@@ -5,7 +5,7 @@
 - Windows 10/11
 - **Python 3.10+**（二选一）：
   - 官方 Python：[python.org](https://www.python.org/downloads/)（勾选 **Add to PATH**），或
-  - **Anaconda / Miniconda**（见下方专节）
+  - **Miniforge / Miniconda / Anaconda**（见下方专节；均为 Conda，用法相同）
 - 使用 Outlook 日历时：已安装 **桌面版 Outlook** 并已登录
 
 ## 第一次使用
@@ -69,13 +69,13 @@ C:\Users\...\10. Module\...\windows\install-conda.bat
 
 或先 `cd /d "..."` 再 `windows\install-conda.bat`。
 
-## Anaconda / Miniconda 用户（已适配）
+## Miniforge / Miniconda / Anaconda（已适配）
 
-本工具**不依赖** base 环境，会单独创建 Conda 环境 **`planning-tool`**，与你在 base 里装的包互不干扰。
+**Miniforge** 与 Miniconda、Anaconda 一样提供 `conda` 命令，本工具**完全支持**。不依赖 base 里的业务包，会单独创建环境 **`planning-tool`**（Python 3.11）。
 
 **推荐步骤：**
 
-1. 开始菜单打开 **Anaconda Prompt**（或 Miniconda Prompt）
+1. 开始菜单打开 **Miniforge Prompt**（或 Miniconda / Anaconda Prompt）
 2. `cd /d` 到解压后的目录
 3. 运行（任选其一）：
 
@@ -86,7 +86,9 @@ windows\install-conda.bat
 
 或在资源管理器中 **双击根目录 `Install-Conda.bat`**（最简单）。
 
-4. 双击根目录 **`Run-Demo.bat`** / **`Run-With-Outlook.bat`**（内部用 `conda run -n planning-tool`，无需每次手动 `activate`）
+4. 双击根目录 **`Run-Demo.bat`** / **`Planning-Tool-GUI.bat`**（安装时会写入 **`.conda-base`**，指向你的 Miniforge/Conda 安装目录，便于资源管理器双击也能找到 `conda`）
+
+若双击 GUI 仍提示找不到环境：在 **Miniforge Prompt** 里 `cd` 到工具目录，运行一次 **`Save-Conda-Path.bat`**，再双击 GUI。
 
 **手动使用（可选）：**
 

@@ -14,7 +14,7 @@ if not exist "%WHEELS%\*.whl" (
 
 where conda >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] conda not found. Open Anaconda Prompt.
+  echo [ERROR] conda not found. Open Miniforge / Miniconda / Anaconda Prompt.
   pause
   exit /b 1
 )

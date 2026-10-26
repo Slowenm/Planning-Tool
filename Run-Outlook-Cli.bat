@@ -6,9 +6,9 @@ if "%~1"=="" (
   pause
   exit /b 1
 )
-call "%~dp0windows\_conda_activate_planning_tool.bat"
+call "%~dp0windows\_bootstrap_conda_env.bat"
 if errorlevel 1 (
-  echo Run from Anaconda Prompt after Install-Offline.bat
+  echo Run Install-Offline.bat from Miniforge/Anaconda Prompt, or Save-Conda-Path.bat
   pause
   exit /b 1
 )
