@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from icalendar import Calendar, Event, vText
 
+from planning_tool.calendar_export import CalendarEventDefaults, apply_calendar_defaults_to_event
 from planning_tool.config import TIMEZONE
 from planning_tool.models import AssignedBlock, ScheduleResult
 
@@ -143,7 +144,10 @@ def build_markdown_report(result: ScheduleResult) -> str:
     return "\n".join(sections)
 
 
-def build_ics(result: ScheduleResult) -> bytes:
+def build_ics(
+    result: ScheduleResult,
+    event_defaults: CalendarEventDefaults | None = None,
+) -> bytes:
     cal = Calendar()
     cal.add("prodid", "-//Planning Tool//Work Package Scheduler//CN")
     cal.add("version", "2.0")
@@ -165,6 +169,7 @@ def build_ics(result: ScheduleResult) -> bytes:
             f"wp-{block.package.index}-{block.start.isoformat()}@planning-tool"
         )
         ev.add("uid", uid)
+        apply_calendar_defaults_to_event(ev, event_defaults)
         cal.add_component(ev)
 
     buf = StringIO()

@@ -27,7 +27,13 @@ from tkinter import (
 
 from alm_planning_tool.paths import get_tool_root
 from alm_planning_tool.runner import run_alm_schedule
+from planning_tool.calendar_export import CalendarEventDefaults
 from planning_tool.gui_calendar import DatePickerDialog
+from planning_tool.gui_shared import (
+    add_calendar_event_default_rows,
+    load_event_default_vars,
+    persist_event_default_vars,
+)
 from planning_tool.runner import today_local
 from planning_tool.scheduler import resolve_schedule_start
 from planning_tool.work_hours import WorkDayConfig
@@ -55,6 +61,9 @@ class AlmPlanningApp:
         self.work_end = StringVar(value="17:00")
         self.lunch_start = StringVar(value="12:00")
         self.lunch_end = StringVar(value="13:00")
+        self.event_location = StringVar()
+        self.event_category = StringVar()
+        load_event_default_vars(self.event_location, self.event_category)
 
         self._build()
         self._load_outlook_tz()
@@ -170,6 +179,14 @@ class AlmPlanningApp:
         self.ics_hint.grid(row=row, column=1, sticky="w", padx=8, pady=(0, 6))
 
         row += 1
+        row = add_calendar_event_default_rows(
+            frm,
+            row,
+            self.event_location,
+            self.event_category,
+            pad=pad,
+        )
+
         Label(frm, text="排期输出文件:").grid(row=row, column=0, sticky="w", **pad)
         out_hint = Frame(frm)
         out_hint.grid(row=row, column=1, sticky="w", **pad)
@@ -306,10 +323,21 @@ class AlmPlanningApp:
             self._log("—— 开始排期 ——")
             self._log(f"任务: {tasks}")
             self._log(f"输出: {out_dir}")
+            persist_event_default_vars(self.event_location, self.event_category)
+            event_defaults = CalendarEventDefaults(
+                location=self.event_location.get(),
+                category=self.event_category.get(),
+            ).normalized()
+
             self._log(
                 f"开始日: {start.isoformat()}  工作: {wh.label_work()}  午餐: {wh.label_lunch()}  "
                 f"日缓冲: {buffer_h}h  日历: {cal}"
             )
+            if event_defaults.location or event_defaults.category:
+                self._log(
+                    f"日程默认 Location: {event_defaults.location or '—'}  "
+                    f"Category: {event_defaults.category or '—'}"
+                )
 
             result = run_alm_schedule(
                 tasks,
@@ -322,6 +350,7 @@ class AlmPlanningApp:
                 start_date=start,
                 daily_buffer_hours=buffer_h,
                 work_hours=wh,
+                event_defaults=event_defaults,
             )
             total_h = sum(p.hours for p in result.packages)
             finish = ""

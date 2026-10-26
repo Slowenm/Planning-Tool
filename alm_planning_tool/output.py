@@ -9,6 +9,7 @@ from icalendar import Calendar, Event, vText
 from alm_planning_tool.alm_io import write_alm_csv_utf16_tab
 from alm_planning_tool.constants import PLANNING_STATUS_COLUMN
 from alm_planning_tool.models import AlmLoadResult, AlmScheduleResult
+from planning_tool.calendar_export import CalendarEventDefaults, apply_calendar_defaults_to_event
 from planning_tool.models import AssignedBlock, ScheduleResult, WorkPackage
 from planning_tool.output import (
     build_markdown_report as build_excel_markdown_report,
@@ -73,7 +74,10 @@ def build_markdown_report(
     )
 
 
-def build_ics(result: AlmScheduleResult) -> bytes:
+def build_ics(
+    result: AlmScheduleResult,
+    event_defaults: CalendarEventDefaults | None = None,
+) -> bytes:
     cal = Calendar()
     cal.add("prodid", "-//ALM Planning Tool//0.0.0//CN")
     cal.add("version", "2.0")
@@ -91,6 +95,7 @@ def build_ics(result: AlmScheduleResult) -> bytes:
         ev.add("dtend", block.end)
         ev.add("dtstamp", datetime.now(tz))
         ev.add("uid", f"alm-{block.package.index}-{block.start.isoformat()}@alm-planning-tool")
+        apply_calendar_defaults_to_event(ev, event_defaults)
         cal.add_component(ev)
     return cal.to_ical()
 

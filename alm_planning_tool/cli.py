@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 from alm_planning_tool.runner import run_alm_schedule
+from planning_tool.calendar_export import resolve_calendar_event_defaults
 from planning_tool.runner import today_local
 from planning_tool.work_hours import WorkDayConfig
 
@@ -36,6 +37,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--work-end", default="17:00")
     parser.add_argument("--lunch-start", default="12:00")
     parser.add_argument("--lunch-end", default="13:00")
+    parser.add_argument("--event-location", default=None)
+    parser.add_argument("--event-category", default=None)
     args = parser.parse_args(argv)
 
     ref = (
@@ -56,6 +59,10 @@ def main(argv: list[str] | None = None) -> int:
             args.lunch_start,
             args.lunch_end,
         )
+        event_defaults = resolve_calendar_event_defaults(
+            args.event_location,
+            args.event_category,
+        )
         result = run_alm_schedule(
             args.tasks,
             args.report,
@@ -67,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
             start_date=start_d,
             daily_buffer_hours=args.daily_buffer_hours,
             work_hours=wh,
+            event_defaults=event_defaults,
         )
     except Exception as e:
         print(f"排期失败: {e}", file=sys.stderr)

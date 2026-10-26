@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from planning_tool.calendar_export import CalendarEventDefaults
 from planning_tool.config import HORIZON_WORK_DAYS, TIMEZONE
 from planning_tool.models import ScheduleResult
 from planning_tool.output import build_ics, build_markdown_report
@@ -42,6 +43,7 @@ def run_schedule(
     start_date: date | None = None,
     daily_buffer_hours: float = 1.0,
     work_hours: WorkDayConfig | None = None,
+    event_defaults: CalendarEventDefaults | None = None,
 ) -> ScheduleResult:
     if not tasks_path.is_file():
         raise FileNotFoundError(f"任务文件不存在: {tasks_path}")
@@ -65,5 +67,5 @@ def run_schedule(
     )
 
     report_path.write_text(build_markdown_report(result), encoding="utf-8")
-    ics_path.write_bytes(build_ics(result))
+    ics_path.write_bytes(build_ics(result, event_defaults))
     return result
