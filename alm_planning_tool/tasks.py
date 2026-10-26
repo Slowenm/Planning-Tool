@@ -24,7 +24,7 @@ def load_alm_tasks(path) -> AlmLoadResult:
     from pathlib import Path
 
     path = Path(path)
-    header_list, body = read_alm_csv(path)
+    header_list, body, raw_header, raw_body = read_alm_csv(path)
     header = tuple(header_list)
 
     idx_type = _col_index(header_list, "Type")
@@ -117,4 +117,6 @@ def load_alm_tasks(path) -> AlmLoadResult:
         rows=rows,
         packages=packages,
         pre_status=pre_status,
+        raw_header_line=raw_header,
+        raw_body_lines=list(raw_body),
     )

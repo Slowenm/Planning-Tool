@@ -1,26 +1,61 @@
 from __future__ import annotations
 
 from datetime import datetime
-from io import StringIO
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from icalendar import Calendar, Event, vText
 
-from alm_planning_tool.alm_io import write_alm_csv
+from alm_planning_tool.alm_io import write_alm_csv_utf16_tab
 from alm_planning_tool.constants import PLANNING_STATUS_COLUMN
 from alm_planning_tool.models import AlmLoadResult, AlmScheduleResult
-from planning_tool.config import TIMEZONE
-from planning_tool.models import AssignedBlock
-
-WEEKDAY_ZH = "一二三四五六日"
+from planning_tool.models import AssignedBlock, ScheduleResult, WorkPackage
+from planning_tool.output import (
+    build_markdown_report as build_excel_markdown_report,
+)
 
 
 def _title_for_block(block: AssignedBlock, result: AlmScheduleResult) -> str:
     for p in result.packages:
         if p.schedule_index == block.package.index:
             return p.title
-    return block.package.name
+    return block.package.summary_prefix
+
+
+def _as_schedule_result(result: AlmScheduleResult) -> ScheduleResult:
+    packages = [
+        WorkPackage(
+            index=p.schedule_index,
+            prefix=p.alm_id,
+            name=p.title.removeprefix(f"[{p.alm_id}]"),
+            hours=p.hours,
+        )
+        for p in result.packages
+    ]
+    return ScheduleResult(
+        start_date=result.start_date,
+        packages=packages,
+        day_plans=result.day_plans,
+        all_blocks=result.all_blocks,
+        prefix_display="（ALM 导入，无 Excel 前缀列）",
+        daily_buffer_hours=result.daily_buffer_hours,
+        work_hours=result.work_hours,
+    )
+
+
+def _format_status_summary(row_status: dict[int, str]) -> str:
+    counts: dict[str, int] = {}
+    for s in row_status.values():
+        counts[s] = counts.get(s, 0) + 1
+    lines = ["## 5. ALM 行状态统计", ""]
+    for k in sorted(counts):
+        lines.append(f"- **{k}**：{counts[k]} 行")
+    lines.append("")
+    lines.append(
+        "各行的 `Planning Status` 已写入同目录下 `*_planned.csv` 最后一列。"
+    )
+    lines.append("")
+    return "\n".join(lines)
 
 
 def build_markdown_report(
@@ -28,30 +63,14 @@ def build_markdown_report(
     result: AlmScheduleResult,
     row_status: dict[int, str],
 ) -> str:
-    lines = [
-        "# ALM 排期报告",
-        "",
-        f"- **起始排期日**：{result.start_date.isoformat()}",
-        f"- **参与排期 Task 数**：{len(result.packages)}",
-        f"- **排期 Task 计划工时合计**：{sum(p.hours for p in result.packages)}h",
-        "",
-        "## Planning Status 统计",
-        "",
-    ]
-    counts: dict[str, int] = {}
-    for s in row_status.values():
-        counts[s] = counts.get(s, 0) + 1
-    for k, v in sorted(counts.items()):
-        lines.append(f"- {k}: {v}")
-    lines.extend(["", "## 已排期 Task", ""])
-    for pkg in result.packages:
-        st = row_status.get(pkg.row_index, "—")
-        due = pkg.due_date.isoformat() if pkg.due_date else "—"
-        lines.append(
-            f"- {pkg.title} — {pkg.hours}h — Due {due} — **{st}**"
-        )
-    lines.append("")
-    return "\n".join(lines)
+    sr = _as_schedule_result(result)
+    base = build_excel_markdown_report(sr)
+    extra = _format_status_summary(row_status)
+    return base.replace(
+        "## 4. ICS 文件",
+        extra + "## 4. ICS 文件",
+        1,
+    )
 
 
 def build_ics(result: AlmScheduleResult) -> bytes:
@@ -81,21 +100,36 @@ def write_planned_csv(
     loaded: AlmLoadResult,
     row_status: dict[int, str],
 ) -> None:
-    header = list(loaded.header)
-    if PLANNING_STATUS_COLUMN not in header:
-        header.append(PLANNING_STATUS_COLUMN)
-    status_col = header.index(PLANNING_STATUS_COLUMN)
-    body: list[list[str]] = []
-    for row in loaded.rows:
-        cells = list(row.cells)
-        while len(cells) < len(header) - 1:
-            cells.append("")
-        st = row_status.get(row.row_index, "")
-        if len(cells) <= status_col:
-            cells.extend([""] * (status_col - len(cells) + 1))
-        if len(cells) == status_col:
-            cells.append(st)
+    header_line = loaded.raw_header_line.rstrip("\r")
+    status_in_header = any(
+        h.strip().lower() == PLANNING_STATUS_COLUMN.lower()
+        for h in loaded.header
+    )
+    if not status_in_header:
+        header_line = f"{header_line}\t{PLANNING_STATUS_COLUMN}"
+
+    body_lines: list[str] = []
+    for i, raw in enumerate(loaded.raw_body_lines):
+        line = raw.rstrip("\r")
+        st = row_status.get(i, "")
+        if status_in_header:
+            from io import StringIO
+            import csv
+
+            idx = next(
+                j
+                for j, h in enumerate(loaded.header)
+                if h.strip().lower() == PLANNING_STATUS_COLUMN.lower()
+            )
+            parts = next(csv.reader(StringIO(line), delimiter="\t"))
+            while len(parts) <= idx:
+                parts.append("")
+            parts[idx] = st
+            buf = StringIO()
+            csv.writer(buf, delimiter="\t", lineterminator="").writerow(parts)
+            line = buf.getvalue().rstrip("\r\n")
         else:
-            cells[status_col] = st
-        body.append(cells)
-    write_alm_csv(path, header, body)
+            line = f"{line}\t{st}"
+        body_lines.append(line)
+
+    write_alm_csv_utf16_tab(path, header_line, body_lines)

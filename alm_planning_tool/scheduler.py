@@ -22,10 +22,14 @@ from planning_tool.work_hours import WorkDayConfig
 
 
 def _to_work_package(p: AlmWorkPackage) -> WorkPackage:
+    summary = p.title
+    prefix = p.alm_id
+    if summary.startswith(f"[{p.alm_id}]"):
+        summary = summary[len(f"[{p.alm_id}]") :]
     return WorkPackage(
         index=p.schedule_index,
-        prefix="",
-        name=p.title,
+        prefix=prefix,
+        name=summary,
         hours=p.hours,
     )
 

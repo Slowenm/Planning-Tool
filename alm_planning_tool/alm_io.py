@@ -7,20 +7,55 @@ from pathlib import Path
 from alm_planning_tool.constants import PLANNING_STATUS_COLUMN
 
 
-def read_alm_csv(path: Path) -> tuple[list[str], list[list[str]]]:
-    raw = path.read_bytes()
-    if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
-        text = raw.decode("utf-16")
-    else:
-        text = raw.decode("utf-16-le")
+def _decode_alm_bytes(raw: bytes) -> str:
+    if raw.startswith(b"\xff\xfe"):
+        return raw[2:].decode("utf-16-le")
+    if raw.startswith(b"\xfe\xff"):
+        return raw[2:].decode("utf-16-be")
+    return raw.decode("utf-16-le")
+
+
+def read_alm_csv(
+    path: Path,
+) -> tuple[list[str], list[list[str]], str, list[str]]:
+    """Parse ALM export; also return raw header/body lines for lossless rewrite."""
+    text = _decode_alm_bytes(path.read_bytes())
     text = text.replace("\r\n", "\n").replace("\r", "\n")
-    reader = csv.reader(StringIO(text), delimiter="\t")
-    rows = list(reader)
-    if not rows:
+    lines = text.split("\n")
+    while lines and not lines[-1].strip():
+        lines.pop()
+    if not lines:
         raise ValueError("ALM CSV 为空")
-    header = [c.strip() for c in rows[0]]
-    body = [[c.strip() if isinstance(c, str) else str(c) for c in row] for row in rows[1:]]
-    return header, body
+
+    raw_header_line = lines[0]
+    raw_body_lines = lines[1:]
+
+    header = [
+        c.strip()
+        for c in next(csv.reader(StringIO(raw_header_line), delimiter="\t"))
+    ]
+    body: list[list[str]] = []
+    for line in raw_body_lines:
+        if not line.strip():
+            body.append([])
+            continue
+        row = next(csv.reader(StringIO(line), delimiter="\t"))
+        body.append(
+            [c.strip() if isinstance(c, str) else str(c) for c in row]
+        )
+    return header, body, raw_header_line, raw_body_lines
+
+
+def write_alm_csv_utf16_tab(
+    path: Path,
+    header_line: str,
+    body_lines: list[str],
+) -> None:
+    """Write UTF-16 LE with BOM so Excel keeps tab-separated columns."""
+    text = "\r\n".join([header_line, *body_lines])
+    if not text.endswith("\r\n"):
+        text += "\r\n"
+    path.write_bytes(b"\xff\xfe" + text.encode("utf-16-le"))
 
 
 def write_alm_csv(
@@ -33,4 +68,6 @@ def write_alm_csv(
     writer.writerow(header)
     for row in body:
         writer.writerow(row)
-    path.write_bytes(buf.getvalue().encode("utf-16-le"))
+    text = buf.getvalue().rstrip("\r\n")
+    lines = text.split("\r\n") if text else [""]
+    write_alm_csv_utf16_tab(path, lines[0], lines[1:])

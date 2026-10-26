@@ -58,3 +58,5 @@ class AlmLoadResult:
     rows: list[AlmRow]
     packages: list[AlmWorkPackage]
     pre_status: dict[int, str]
+    raw_header_line: str = ""
+    raw_body_lines: list[str] = field(default_factory=list)
