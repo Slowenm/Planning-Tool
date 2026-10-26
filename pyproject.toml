@@ -1,7 +1,7 @@
 [project]
 name = "planning-tool"
-version = "2.1.0"
-description = "Planning-Tool 2.x (Excel) + ALM Planning-Tool 0.x (ALM CSV); Outlook scheduling, Markdown and ICS"
+version = "2.0.0"
+description = "Planning-Tool 2.0 (Excel) + ALM Planning-Tool 0.0.0 (ALM CSV); Outlook scheduling, Markdown and ICS"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
