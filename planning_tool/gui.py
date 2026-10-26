@@ -41,7 +41,7 @@ class PlanningApp:
         import tkinter as tk
 
         self.root = tk.Tk()
-        self.root.title("Planning-Tool 工作包排期")
+        self.root.title("Planning-Tool 2.0 — Excel 工作包排期")
         self.root.minsize(680, 560)
 
         self.tasks_path = StringVar()

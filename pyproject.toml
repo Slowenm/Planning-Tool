@@ -1,7 +1,7 @@
 [project]
 name = "planning-tool"
-version = "1.2.1"
-description = "Work package scheduler with Outlook calendar avoidance; outputs Markdown and ICS"
+version = "2.0.0"
+description = "Excel/CSV work-package import and scheduling with Outlook calendar; Markdown and ICS output"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

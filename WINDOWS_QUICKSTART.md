@@ -1,4 +1,4 @@
-# Windows 快速开始（Miniforge）
+# Planning-Tool 2.0 — Windows 快速开始（Miniforge + Excel 导入）
 
 本工具**只通过 [Miniforge](https://github.com/conda-forge/miniforge)** 运行（conda 环境 **`planning-tool`**）。
 

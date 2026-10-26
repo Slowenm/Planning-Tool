@@ -1,6 +1,6 @@
-# Planning-Tool
+# Planning-Tool 2.0
 
-Windows **桌面 Outlook** 工作包排期：读取 Excel/CSV 任务表，避让 Outlook 日历，输出 **Markdown** 与 **`schedule.ics`**（不写回 Outlook）。
+**Excel / CSV 工作包导入与排期工具**（Windows）：从固定模板 Excel 导入任务，结合 Outlook 日历占用自动排期，输出 **Markdown 报告** 与 **`schedule.ics`**（不写回 Outlook，双击 ICS 自行导入）。
 
 **运行环境： [Miniforge](https://github.com/conda-forge/miniforge)**（conda 环境 `planning-tool`）。不支持 Anaconda 专用安装流程；已移除独立 venv 安装入口。
 
@@ -17,7 +17,7 @@ Windows **桌面 Outlook** 工作包排期：读取 Excel/CSV 任务表，避让
 
 ## 下载（Windows）
 
-[Releases](https://github.com/Slowenm/Planning-Tool/releases) → **`Planning-Tool-*-windows-portable.zip`**
+[Releases](https://github.com/Slowenm/Planning-Tool/releases) → **`Planning-Tool-2.0.0-windows-portable.zip`**（或最新 **v2.x** 便携包）
 
 1. 安装 [Miniforge](https://github.com/conda-forge/miniforge/releases)（若尚未安装）
 2. 解压 zip，双击根目录 **`Install-Miniforge.bat`**
