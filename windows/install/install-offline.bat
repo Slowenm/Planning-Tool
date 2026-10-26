@@ -78,10 +78,9 @@ if not "%PIP_PROJ%"=="0" (
   echo [WARN] pip install returned %PIP_PROJ% but import works; continuing.
 )
 
-call "%~dp0..\internal\_find_conda_base.bat"
-if defined CONDA_BASE (
-  echo !CONDA_BASE!> "%TOOL_ROOT%\.miniforge-base"
-  echo !CONDA_BASE!> "%TOOL_ROOT%\.conda-base"
+for /f "delims=" %%G in ('conda info --base 2^>nul') do (
+  echo %%G> "%TOOL_ROOT%\.miniforge-base"
+  echo %%G> "%TOOL_ROOT%\.conda-base"
 )
 
 echo.
