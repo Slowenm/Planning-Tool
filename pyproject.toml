@@ -1,7 +1,7 @@
 [project]
 name = "planning-tool"
-version = "2.0.0"
-description = "Excel/CSV work-package import and scheduling with Outlook calendar; Markdown and ICS output"
+version = "2.1.0"
+description = "Planning-Tool 2.x (Excel) + ALM Planning-Tool 0.x (ALM CSV); Outlook scheduling, Markdown and ICS"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -17,6 +17,8 @@ dev = ["pytest>=8.0.0"]
 [project.scripts]
 plan-work = "planning_tool.cli:main"
 planning-tool-gui = "planning_tool.gui:main"
+alm-plan = "alm_planning_tool.cli:main"
+alm-planning-tool-gui = "alm_planning_tool.gui:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]
@@ -24,4 +26,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["planning_tool*"]
+include = ["planning_tool*", "alm_planning_tool*"]

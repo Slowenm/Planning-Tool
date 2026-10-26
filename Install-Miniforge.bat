@@ -4,7 +4,7 @@ title Planning-Tool 安装（Miniforge）
 cd /d "%~dp0"
 set "TOOL_ROOT=%CD%"
 echo.
-echo 本工具通过 Miniforge 运行（环境 planning-tool）
+echo Planning-Tool 2.0 — Excel 工作包导入排期（Miniforge 环境 planning-tool）
 echo 安装包: https://github.com/conda-forge/miniforge/releases
 echo.
 call "%TOOL_ROOT%\windows\install\install-offline.bat" --from-wrapper
