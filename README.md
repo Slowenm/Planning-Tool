@@ -23,7 +23,7 @@ Windows **桌面 Outlook** 工作包排期：读取 Excel/CSV 任务表，避让
 2. 解压 zip，双击根目录 **`Install-Miniforge.bat`**
 3. 双击 **`Planning-Tool-GUI.bat`** 或 **`Run-Demo.bat`**
 
-根目录仅保留安装与运行入口；维护脚本在 **`setup/`**，诊断在 **` diagnostics/`**。详见 **`WINDOWS_QUICKSTART.md`**。
+根目录仅保留安装与运行入口；维护脚本在 **`setup/`**，诊断在 **`diagnostics/`**。详见 **`WINDOWS_QUICKSTART.md`**。
 
 ## CLI 示例
 
