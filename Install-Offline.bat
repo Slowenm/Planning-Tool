@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Planning-Tool Offline Install
+title Planning-Tool Install (Miniforge / offline)
 cd /d "%~dp0"
 call "%~dp0windows\install-offline.bat" --from-wrapper
 set RC=%ERRORLEVEL%
