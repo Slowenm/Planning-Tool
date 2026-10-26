@@ -6,10 +6,11 @@
 
 ```
 Planning-Tool-*/
-  Install-Miniforge.bat      ← 第一次：安装环境
-  Planning-Tool-GUI.bat      ← 日常：图形排期
-  Run-Demo.bat               ← 试跑示例
-  Run-With-Outlook.bat       ← 拖任务表 + Outlook
+  Install-Miniforge.bat      ← 第一次：安装环境（含 Excel 2.0 + ALM 0.0）
+  Planning-Tool-GUI.bat      ← Excel 工作包排期
+  ALM-Planning-Tool-GUI.bat  ← ALM CSV 导入排期
+  Run-Demo.bat / ALM-Run-Demo.bat
+  Run-With-Outlook.bat       ← 拖 Excel/CSV（2.0 模板）
   setup/                     ← 安装维护（离线安装、修复、验证、保存 Miniforge 路径）
   run/                       ← 额外 CLI 运行方式
   diagnostics/               ← 测试 Python / Outlook 读取
