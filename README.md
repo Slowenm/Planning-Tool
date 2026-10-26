@@ -25,6 +25,9 @@
 
 根目录仅保留安装与运行入口；维护脚本在 **`setup/`**，诊断在 **`diagnostics/`**。详见 **`WINDOWS_QUICKSTART.md`**。
 
+**ALM 导入排期（0.0.0）**：同一 zip 内另含 **`ALM-Planning-Tool-GUI.bat`**，见 **`docs/ALM_QUICKSTART.md`**。  
+GitHub Release **v2.1.0** 便携包 = Excel **2.0** + ALM **0.0.0** 合包；`pip`/包版本号仍为 **2.0.0**（Excel 产品线）。
+
 ## CLI 示例
 
 ```bat
