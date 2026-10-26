@@ -1,14 +1,8 @@
 @echo off
-title Planning-Tool Repair (Conda pip only)
+title Planning-Tool 修复安装（Miniforge）
 cd /d "%~dp0"
-echo 在当前目录重新 pip install（不删除 planning-tool 环境；移动文件夹后建议运行一次）
+echo 在当前目录重新离线安装（不删除 planning-tool 环境）
 echo 目录: %CD%
 echo.
-where conda >nul 2>nul
-if errorlevel 1 (
-  echo [错误] 找不到 conda，请在本窗口先运行 Anaconda 的 activate 或使用 Anaconda Prompt
-  pause
-  exit /b 1
-)
-call "%~dp0windows\install-conda.bat" --from-wrapper
+call "%~dp0windows\install-offline.bat" --from-wrapper
 pause

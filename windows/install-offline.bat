@@ -1,6 +1,8 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0\.."
+
+call "%~dp0_prepend_conda_path.bat"
 
 set "WHEELS=%CD%\offline\wheels"
 set "LOG=%CD%\install-last.log"
@@ -14,14 +16,16 @@ if not exist "%WHEELS%\*.whl" (
 
 where conda >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] conda not found. Open Miniforge / Miniconda / Anaconda Prompt.
+  echo [ERROR] 找不到 Miniforge / conda。
+  echo 请安装 Miniforge: https://github.com/conda-forge/miniforge/releases
+  echo 或在「Miniforge Prompt」中运行 Install-Miniforge.bat / Install-Offline.bat
   pause
   exit /b 1
 )
 
 conda env list | findstr /i /b "planning-tool " >nul 2>nul
 if errorlevel 1 (
-  echo [1/5] Creating conda env planning-tool ...
+  echo [1/5] Creating Miniforge env planning-tool ...
   conda create -n planning-tool python=3.11 -y
   if errorlevel 1 (
     echo [ERROR] conda create failed.
@@ -57,7 +61,7 @@ call "%~dp0_tool_env.bat"
 python -m pip install --no-build-isolation --no-index --find-links "%WHEELS%" ".[outlook]"
 set "PIP_PROJ=%ERRORLEVEL%"
 
-echo conda> .env-mode
+echo miniforge> .env-mode
 echo offline>> .env-mode
 echo system> "%CD%\.outlook-tz"
 
@@ -74,7 +78,11 @@ if not "%PIP_PROJ%"=="0" (
   echo [WARN] pip install returned %PIP_PROJ% but import works; continuing.
 )
 
-for /f "delims=" %%G in ('conda info --base 2^>nul') do echo %%G> "%CD%\.conda-base"
+call "%~dp0_find_conda_base.bat"
+if defined CONDA_BASE (
+  echo !CONDA_BASE!> "%CD%\.miniforge-base"
+  echo !CONDA_BASE!> "%CD%\.conda-base"
+)
 
 echo.
 echo [OK] Offline install done. Next: Run-Demo.bat

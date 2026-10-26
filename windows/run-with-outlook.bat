@@ -17,7 +17,7 @@ echo.
 if %RC%==0 (
   echo Done. Open schedule.md to review, then double-click schedule.ics to import Outlook.
 ) else (
-  echo Failed. If you use Anaconda, run from Anaconda Prompt after Install-Offline.bat.
+  echo Failed. Run Install-Miniforge.bat from Miniforge Prompt if needed.
 )
 pause
 exit /b %RC%

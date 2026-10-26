@@ -3,7 +3,7 @@ cd /d "%~dp0"
 call windows\_tool_env.bat
 call windows\_bootstrap_conda_env.bat
 if errorlevel 1 (
-  echo Activate failed. Use Miniforge/Anaconda Prompt or Save-Conda-Path.bat
+  echo Failed. Run Install-Miniforge.bat or Save-Miniforge-Path.bat
   pause
   exit /b 1
 )

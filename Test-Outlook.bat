@@ -3,7 +3,7 @@ cd /d "%~dp0"
 call "%~dp0windows\_tool_env.bat"
 call "%~dp0windows\_bootstrap_conda_env.bat"
 if errorlevel 1 (
-  echo Open Miniforge/Anaconda Prompt, run Install-Offline.bat first.
+  echo Install Miniforge, then run Install-Miniforge.bat
   pause
   exit /b 1
 )
