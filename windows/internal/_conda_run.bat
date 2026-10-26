@@ -10,6 +10,7 @@ if /i not "%~1"=="python" (
   exit /b 1
 )
 shift
+rem NOTE: after shift, %%* may still include "python" on Windows — use %%1..%%9
 
 set "PLANNING_TOOL_ROOT=%TOOL_ROOT%"
 set "PYTHONPATH=%TOOL_ROOT%"
@@ -18,15 +19,10 @@ set "ENV_PY="
 if defined CONDA_BASE set "ENV_PY=!CONDA_BASE!\envs\planning-tool\python.exe"
 if defined ENV_PY if exist "!ENV_PY!" goto :run_direct
 
-rem Fallback: env may live under another Miniforge; use conda run
 where conda >nul 2>nul
 if errorlevel 1 (
   echo [ERROR] Miniforge not found and planning-tool python missing.
-  echo Expected: %CONDA_BASE%\envs\planning-tool\python.exe
-  echo.
-  echo Open "Miniforge Prompt", cd to tool folder, run:
-  echo   Fix-Miniforge-Path.bat
-  echo   Install-Miniforge.bat
+  echo Run Fix-Miniforge-Path.bat and Install-Miniforge.bat from Miniforge Prompt.
   exit /b 1
 )
 
@@ -37,13 +33,13 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Using: conda run -n planning-tool python ...
-conda run -n planning-tool --no-capture-output python %*
+echo Using: conda run -n planning-tool python %1 %2 %3 %4 %5 %6 %7 %8 %9
+conda run -n planning-tool --no-capture-output python %1 %2 %3 %4 %5 %6 %7 %8 %9
 set "RC=%ERRORLEVEL%"
 endlocal & exit /b %RC%
 
 :run_direct
 echo Using: !ENV_PY!
-"!ENV_PY!" %*
+"!ENV_PY!" %1 %2 %3 %4 %5 %6 %7 %8 %9
 set "RC=%ERRORLEVEL%"
 endlocal & exit /b %RC%
