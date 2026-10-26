@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-title Planning-Tool Demo
-call "%~dp0windows\run-demo.bat"
+set "TOOL_ROOT=%CD%"
+call "%TOOL_ROOT%\windows\run\run-demo.bat"

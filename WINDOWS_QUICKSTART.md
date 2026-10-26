@@ -1,77 +1,64 @@
 # Windows 快速开始（Miniforge）
 
-本工具**只通过 [Miniforge](https://github.com/conda-forge/miniforge)** 的 Python 运行：在 Miniforge 里创建独立环境 **`planning-tool`**，与系统及其他项目隔离。**不再使用 Anaconda / 独立 venv。**
+本工具**只通过 [Miniforge](https://github.com/conda-forge/miniforge)** 运行（conda 环境 **`planning-tool`**）。
 
-## 前提
+## 目录结构（bat）
 
-- Windows 10/11
-- 已安装 **Miniforge**（安装时可选 “Add to PATH”；不选也能用，见下方「保存路径」）
-- 使用 Outlook 日历时：桌面版 Outlook 已登录
+```
+Planning-Tool-*/
+  Install-Miniforge.bat      ← 第一次：安装环境
+  Planning-Tool-GUI.bat      ← 日常：图形排期
+  Run-Demo.bat               ← 试跑示例
+  Run-With-Outlook.bat       ← 拖任务表 + Outlook
+  setup/                     ← 安装维护（离线安装、修复、验证、保存 Miniforge 路径）
+  run/                       ← 额外 CLI 运行方式
+  diagnostics/               ← 测试 Python / Outlook 读取
+  windows/                   ← 内部脚本（install / run / internal，一般勿直接点）
+  planning_tool/             ← 程序代码
+  offline/wheels/            ← 离线依赖（完整 zip ~9MB）
+```
 
 ## 第一次使用
 
-1. 解压 ZIP 到**任意文件夹**（路径可含空格，如 `10. Module`）
-2. 双击 **`Install-Miniforge.bat`**（与 `Install-Offline.bat` 相同，离线 wheels，不访问 PyPI）
-   - 若提示找不到 conda：开始菜单打开 **Miniforge Prompt**，`cd /d "解压目录"`，再运行 `Install-Miniforge.bat`
-3. 双击 **`Run-Demo.bat`**，确认生成 `schedule.md` / `schedule.ics`
-4. 正式使用：**`Planning-Tool-GUI.bat`**，或把任务表拖到 **`Run-With-Outlook.bat`**
+1. 解压到任意目录（路径可含空格）
+2. 双击 **`Install-Miniforge.bat`**
+3. 双击 **`Run-Demo.bat`** 确认生成 `schedule.md` / `schedule.ics`
+4. 正式：**`Planning-Tool-GUI.bat`** 或 **拖 xlsx 到 `Run-With-Outlook.bat`**
 
-### 解压后主要文件
+找不到 conda 时：打开 **Miniforge Prompt** → `cd /d "解压目录"` → 再运行 `Install-Miniforge.bat`。
 
-| 用途 | 文件 |
+## setup/ 维护脚本
+
+| 脚本 | 用途 |
 |------|------|
-| 安装 | **`Install-Miniforge.bat`** |
-| 图形界面 | **`Planning-Tool-GUI.bat`** |
-| 试跑 / Outlook 排期 | `Run-Demo.bat`、`Run-With-Outlook.bat` |
-| 保存 Miniforge 路径（便于双击 bat） | **`Save-Miniforge-Path.bat`** |
-| 检查 / 修复 | `Verify-Install.bat`、`Repair-Install.bat` |
-| 程序 | `planning_tool\`、`offline\wheels\`（完整包约 9MB） |
+| `setup\Install-Offline.bat` | 同根目录 Install-Miniforge（离线） |
+| `setup\Repair-Install.bat` | 重装 |
+| `setup\Verify-Install.bat` | 检查是否装好 |
+| `setup\Save-Miniforge-Path.bat` | 双击 GUI 失败时，写入 `.miniforge-base` |
 
-安装成功后会生成 **`.miniforge-base`**（Miniforge 安装目录）和 **`.env-mode`**（内容为 `miniforge`）。
+## diagnostics/
 
-### 整包复制到新位置
+| 脚本 | 用途 |
+|------|------|
+| `diagnostics\Test-Cli.bat` | import / `--help` |
+| `diagnostics\Test-Outlook.bat` | 生成 `outlook-calendar-test.md` |
 
-- 脚本自动 `cd` 到 bat 所在目录，并设置 `PLANNING_TOOL_ROOT` / `PYTHONPATH`
-- 复制后一般直接双击 GUI 即可；若失败，在新目录再运行 **`Install-Miniforge.bat`** 或 **`Repair-Install.bat`**
+## run/
 
-## 图形界面
+| 脚本 | 用途 |
+|------|------|
+| `run\Run-Outlook-Cli.bat` | 拖任务表，Outlook CLI 排期 |
 
-双击 **`Planning-Tool-GUI.bat`**：选任务表、输出目录、开始日期、工作/午餐时间、日历来源 → **开始排期**。
+## 便携 / 移动文件夹
 
-## Miniforge Prompt 手动命令
-
-路径含空格时必须加引号：
-
-```bat
-cd /d "D:\你的路径\Planning-Tool-1.1.0-windows-portable"
-Install-Miniforge.bat
-conda activate planning-tool
-call windows\_tool_env.bat
-python -m planning_tool.cli --tasks examples\tasks_template.csv --calendar outlook
-```
+复制整包后一般直接双击 GUI；异常则在新目录再跑 **`Install-Miniforge.bat`** 或 **`setup\Repair-Install.bat`**。
 
 ## Outlook 时区
 
-排期使用东八区。默认 **`.outlook-tz`** 为 `system`（与 Windows 时区一致）。若会议时间差 8 小时，改为 `utc` 或 `asia_shanghai` 后运行 **`Test-Outlook.bat`**。
+默认 `.outlook-tz` = `system`。差 8 小时时改为 `utc` 或 `asia_shanghai`，再跑 `diagnostics\Test-Outlook.bat`。
 
-## 外网可用时的在线安装（可选）
+## 在线 pip（可选，需外网）
 
-能访问 pypi.org 时，在 Miniforge Prompt 中：
+Miniforge Prompt 中：`windows\install\install-conda.bat`
 
-```bat
-cd /d "解压目录"
-windows\install-conda.bat
-```
-
-内网 / pip 401 请始终用 **`Install-Miniforge.bat`**（离线 wheels）。
-
-## 故障排查
-
-| 现象 | 处理 |
-|------|------|
-| 找不到 conda | 安装 Miniforge；或在 Miniforge Prompt 安装；或 **`Save-Miniforge-Path.bat`** |
-| 没有 planning-tool 环境 | 运行 **`Install-Miniforge.bat`** |
-| 移动文件夹后 import 失败 | **`Repair-Install.bat`** |
-| Outlook 占用不对 | **`Test-Outlook.bat`** + 调整 `.outlook-tz` |
-
-规则说明：`docs\Planning_Skill_V2.md`
+规则：`docs\Planning_Skill_V2.md`

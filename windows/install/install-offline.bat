@@ -1,11 +1,11 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
-cd /d "%~dp0\.."
+call "%~dp0..\internal\_ensure_tool_root.bat"
+cd /d "%TOOL_ROOT%"
+call "%~dp0..\internal\_prepend_conda_path.bat"
 
-call "%~dp0_prepend_conda_path.bat"
-
-set "WHEELS=%CD%\offline\wheels"
-set "LOG=%CD%\install-last.log"
+set "WHEELS=%TOOL_ROOT%\offline\wheels"
+set "LOG=%TOOL_ROOT%\install-last.log"
 echo === install-offline %DATE% %TIME% ===>> "%LOG%"
 
 if not exist "%WHEELS%\*.whl" (
@@ -18,7 +18,7 @@ where conda >nul 2>nul
 if errorlevel 1 (
   echo [ERROR] 找不到 Miniforge / conda。
   echo 请安装 Miniforge: https://github.com/conda-forge/miniforge/releases
-  echo 或在「Miniforge Prompt」中运行 Install-Miniforge.bat / Install-Offline.bat
+  echo 或在 Miniforge Prompt 中运行 Install-Miniforge.bat
   pause
   exit /b 1
 )
@@ -37,7 +37,7 @@ if errorlevel 1 (
 )
 
 echo [2/5] Activating planning-tool ...
-call "%~dp0_conda_activate_planning_tool.bat"
+call "%~dp0..\internal\_conda_activate_planning_tool.bat"
 if errorlevel 1 (
   echo [ERROR] Could not activate planning-tool.
   pause
@@ -56,19 +56,19 @@ echo [4/5] Offline pip: openpyxl, icalendar, tzdata, pywin32 ...
 python -m pip install --no-index --find-links "%WHEELS%" openpyxl icalendar tzdata pywin32
 if errorlevel 1 goto :pip_fail
 
-echo [5/5] Register this project (offline, non-editable — 整包移动后请在本目录重跑安装) ...
-call "%~dp0_tool_env.bat"
+echo [5/5] Register this project (offline) ...
+call "%~dp0..\internal\_tool_env.bat"
 python -m pip install --no-build-isolation --no-index --find-links "%WHEELS%" ".[outlook]"
 set "PIP_PROJ=%ERRORLEVEL%"
 
-echo miniforge> .env-mode
-echo offline>> .env-mode
-echo system> "%CD%\.outlook-tz"
+echo miniforge> "%TOOL_ROOT%\.env-mode"
+echo offline>> "%TOOL_ROOT%\.env-mode"
+echo system> "%TOOL_ROOT%\.outlook-tz"
 
-echo Verify import (from this folder) ...
+echo Verify import ...
 python -c "import planning_tool.cli; print('import OK')"
 if errorlevel 1 (
-  echo [ERROR] planning_tool not importable from %CD%. Details:
+  echo [ERROR] planning_tool not importable from %TOOL_ROOT%.
   python -c "import planning_tool.cli"
   pause
   exit /b 1
@@ -78,14 +78,14 @@ if not "%PIP_PROJ%"=="0" (
   echo [WARN] pip install returned %PIP_PROJ% but import works; continuing.
 )
 
-call "%~dp0_find_conda_base.bat"
+call "%~dp0..\internal\_find_conda_base.bat"
 if defined CONDA_BASE (
-  echo !CONDA_BASE!> "%CD%\.miniforge-base"
-  echo !CONDA_BASE!> "%CD%\.conda-base"
+  echo !CONDA_BASE!> "%TOOL_ROOT%\.miniforge-base"
+  echo !CONDA_BASE!> "%TOOL_ROOT%\.conda-base"
 )
 
 echo.
-echo [OK] Offline install done. Next: Run-Demo.bat
+echo [OK] Offline install done. Next: Planning-Tool-GUI.bat or Run-Demo.bat
 if /i not "%~1"=="--from-wrapper" pause
 exit /b 0
 

@@ -1,8 +1,8 @@
 @echo off
-rem Resolve Miniforge (or other conda) installation root into CONDA_BASE
+call "%~dp0_ensure_tool_root.bat"
 set "CONDA_BASE="
-if exist "%~dp0..\.miniforge-base" set /p CONDA_BASE=<"%~dp0..\.miniforge-base"
-if not defined CONDA_BASE if exist "%~dp0..\.conda-base" set /p CONDA_BASE=<"%~dp0..\.conda-base"
+if exist "%TOOL_ROOT%\.miniforge-base" set /p CONDA_BASE=<"%TOOL_ROOT%\.miniforge-base"
+if not defined CONDA_BASE if exist "%TOOL_ROOT%\.conda-base" set /p CONDA_BASE=<"%TOOL_ROOT%\.conda-base"
 if not defined CONDA_BASE (
   where conda >nul 2>nul
   if not errorlevel 1 for /f "delims=" %%G in ('conda info --base 2^>nul') do set "CONDA_BASE=%%G"
